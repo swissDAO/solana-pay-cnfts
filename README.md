@@ -66,9 +66,9 @@ Copy the forwarding address in your terminal and paste in your browser.
 
 ## Credits
 
--Callum McIntyre - Solana Pay Build on Pointer.GG (https://www.pointer.gg/tutorials/solana-pay-irl-payments/)
--Raza - Solana Pay Build on buildspace.so (https://buildspace.so/builds/solana-pay)
--Nick Frosty - Compressed NFT's on Solana repo (https://github.com/solana-developers/compressed-nfts)
+Callum McIntyre - Solana Pay Build on Pointer.GG (https://www.pointer.gg/tutorials/solana-pay-irl-payments/)
+Raza - Solana Pay Build on buildspace.so (https://buildspace.so/builds/solana-pay)
+Nick Frosty - Compressed NFT's on Solana repo (https://github.com/solana-developers/compressed-nfts)
 
 ## License
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
