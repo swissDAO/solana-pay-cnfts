@@ -107,7 +107,13 @@ export default function Home() {
   const handleCouponMint = async (buyer: string) => {
     if(!buyer) return;
     // 1 - Send a POST request to our backend with the buyer's public key
-    const CONFIG = { buyerPublicKey: buyer };
+    const CONFIG = { 
+      buyerPublicKey: buyer,
+      // format products to be [(product, quantity), (product, quantity]
+      products: order?.products.map((product) => [product.id, product.quantity]),
+      amount: paymentConfirmation?.amount,
+      reference: paymentConfirmation?.reference, 
+    };
     const res = await fetch(
       '/api/coupon',
       {
