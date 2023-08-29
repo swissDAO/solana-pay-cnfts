@@ -1,6 +1,5 @@
 import { NextApiRequest, NextApiResponse } from 'next';
 import { PublicKey, Keypair, Connection, Transaction } from '@solana/web3.js';
-import axios from 'axios';
 import {
   MetadataArgs,
   TokenProgramVersion,
@@ -10,13 +9,6 @@ import {
 // import custom helpers to mint compressed NFTs
 import { WrapperConnection } from "../../ReadApi/WrapperConnection"
 import { mintCompressedNFT } from "../../utils/compression";
-import {
-  loadKeypairFromFile,
-  loadOrGenerateKeypair,
-  loadPublicKeysFromFile,
-  printConsoleSeparator,
-  explorerURL
-} from "../../utils/helpers";
 
 // load the env variables and store the cluster RPC url
 import dotenv from "dotenv";
@@ -76,7 +68,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
             // fully mint a single compressed NFT to the payer
             console.log(`Minting a single compressed NFT to ${buyerPublicKey.toBase58()}...`);
 
-            const txSignature = await mintCompressedNFT(
+            await mintCompressedNFT(
                 connection,
                 payer,
                 treeAddress,
@@ -88,12 +80,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 buyerPublicKey,
               );
               console.log("\nSuccessfully minted the compressed NFT!");
-              console.log(explorerURL({ txSignature }));
             //   return status: success and the txSignature
             return res.status(200).json(
                 {
-                    status: 'success',
-                    txSignature: txSignature
+                    status: 'success'
                 }
             )
         } catch (error) {

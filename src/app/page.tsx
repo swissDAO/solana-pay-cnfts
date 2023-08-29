@@ -6,7 +6,7 @@ import Link from 'next/link';
 import Logo from '../../constants/logo';
 import { Connection, PublicKey, Keypair } from '@solana/web3.js';
 import { useState, useMemo, useEffect, useRef } from 'react';
-import { createQR, encodeURL, TransactionRequestURLFields } from "@solana/pay";
+import { createQR, encodeURL, TransactionRequestURLFields, findReference, FindReferenceError } from "@solana/pay";
 import { sendAndConfirmTransaction } from '@solana/web3.js';
 import { products } from '../../constants/products';
 import { getAssociatedTokenAddress } from "@solana/spl-token";
@@ -21,12 +21,15 @@ export default function Home() {
   // ref to a div where we'll show the QR code
   const qrRef = useRef<HTMLDivElement>(null)
   const [qrActive, setQrActive] = useState<boolean>(false);
+  const [paymentConfirmation, setPaymentConfirmation] = useState<any>(undefined)
   const [reference, setReference] = useState<PublicKey>(Keypair.generate().publicKey);
   const solanaConnection = new Connection('https://api.devnet.solana.com',{wsEndpoint:process.env.NEXT_PUBLIC_WS_URL!});
   const notify = (message: string ) => toast(message);
   const generateNewReference = () => {
     setReference(Keypair.generate().publicKey);
+    setPaymentConfirmation(undefined);
   }
+  const mostRecentNotifiedTransaction = useRef<string | undefined>(undefined);
   const order = useMemo(() => {
     // map through the cart and get the total amount and update the order fixed to 2 decimals
     const total = cart.reduce((acc, item) => {
@@ -83,8 +86,6 @@ export default function Home() {
     const order_as_string = `products=${order_products}&quantity=${order_products_quantity}&amount=${order?.amount}&currency=${order?.currency}&reference=${order?.reference}`
     const apiUrl = `${location.protocol}//${location.host}/api/pay?${order_as_string}`
 
-    console.log('order products', order_products)
-    console.log('order products quantity', order_products_quantity)
     console.log('order as string', order_as_string)
     console.log('api url', apiUrl)
     
@@ -105,7 +106,6 @@ export default function Home() {
 
   const handleCouponMint = async (buyer: string) => {
     if(!buyer) return;
-    console.log('sending buyer to coupon mint', buyer)
     // 1 - Send a POST request to our backend with the buyer's public key
     const CONFIG = { buyerPublicKey: buyer };
     const res = await fetch(
@@ -118,100 +118,98 @@ export default function Home() {
         body: JSON.stringify(CONFIG),
       }
     );
-    const response_status = await res.status;
-    const response_body = await res.text();
-    if (response_status === 200) {
-      if(!response_body) {
-        console.log('response body is empty');
-        return;
-      }
-      let response = JSON.parse(response_body);
-      console.log('response', response);
-      const txSignature = response.txSignature;
-      const tx_url = `https://explorer.solana.com/tx/${txSignature}?cluster=devnet`;
-      console.log('tx url', tx_url);
-    } 
-    return response_body;
+    const response_status = res.status;
+    if(response_status === 200) {
+      console.log('coupon minted');
+      console.log('response', res);
+    }
+ 
+    return ;
   };
-
-  // if there is a qrCode present then create a subscription to the NEXT_PUBLIC_STORE_WALLET_ADDRESS and listen for a payment with the reference,
-  //  once the payment is received alert the user and clear the qrCode and reference
+  
   useEffect(() => {
-    if(!listenForPayment) return;
-    const solanaConnection = new Connection('https://api.devnet.solana.com',{wsEndpoint:process.env.NEXT_PUBLIC_WS_URL!});
-    // Mainnet - USDC
-    // const usdcAddress = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
-    // # Faucet https://spl-token-faucet.com/?token-name=USDC-Dev
-    // # USDC Devnet 
-    const usdcAddress=new PublicKey('Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr')
+    const interval = setInterval(async () => {
+      if(paymentConfirmation) return;
+      try {
+        // Check if there is any transaction for the reference
+        const signatureInfo = await findReference(solanaConnection, reference, { until: mostRecentNotifiedTransaction.current });
 
-    async function executeListener () {
-      const shopUsdcAddress = await getAssociatedTokenAddress(usdcAddress, new PublicKey(process.env.NEXT_PUBLIC_STORE_WALLET_ADDRESS!));
-      const ACCOUNT_TO_WATCH = shopUsdcAddress;
-      const subscriptionId = solanaConnection.onAccountChange(ACCOUNT_TO_WATCH,
-      async () => {
-        // get the signature from the latest transaction
-        const latest_signature = (await solanaConnection.getConfirmedSignaturesForAddress2(ACCOUNT_TO_WATCH, {limit:1}))[0].signature;
-        // // get the parsed transaction info from the store wallet address
-        const parsed_transaction = await solanaConnection.getParsedTransactions([latest_signature], 'confirmed');
+        console.log('Transaction confirmed', signatureInfo);
+        // notify({ type: 'success', message: 'Transaction confirmed', txid: signatureInfo.signature });
+        // alert(`Transaction confirmed ${signatureInfo}`);
+        mostRecentNotifiedTransaction.current = signatureInfo.signature;
+
+        // get the parsed transaction info from the store wallet address
+        const parsed_transaction = await solanaConnection.getParsedTransactions([mostRecentNotifiedTransaction.current!], 'confirmed');
         // parse parsed_transaction[0]?.transaction?.message.accountKeys for where signer: true and get the public key
         const signer_of_transaction = parsed_transaction[0]?.transaction?.message.accountKeys.filter((account: any) => account.signer)[0].pubkey.toBase58();
         // get the transfered amount from the parsed transaction
-        const transfered_amount = parsed_transaction[0]?.transaction?.message.instructions.filter((program: any) => program.program === 'spl-token')[0];
+        // @ts-ignore
+        const transfered_amount = parsed_transaction[0]?.transaction?.message.instructions.filter((program: any) => program.program === 'spl-token')[0].parsed.info.tokenAmount.uiAmount;
         console.log('parsed transaction', parsed_transaction)
         console.log('transfered amount', transfered_amount)
-        // @ts-ignore
-        const token_ui_amount = transfered_amount?.parsed?.info?.tokenAmount.uiAmount;
-        
-        if(
-          // @ts-ignore
-          order?.reference === transfered_amount?.parsed?.info?.signers[0] &&
-          parseFloat(token_ui_amount) >= parseFloat('10.00')
-        ){
-          console.log('minting coupon')
-          await handleCouponMint(signer_of_transaction!).then((response) => {
-            console.log('response', response)
-          });
-          await solanaConnection.removeAccountChangeListener(subscriptionId);
-          qrRef.current?.removeChild(qrRef.current?.firstChild!);
-          setQrActive(false);
-          setCart([]);
-          
-          generateNewReference();
-          setListenForPayment(false);
-          notify(`Transaction verified, you spent ${token_ui_amount} USDC.
-            ${
-              parseFloat(token_ui_amount) >= parseFloat('10.00') ?
-              `You spent ${token_ui_amount} USDC and will receive a coupon!` :
-              `Spend ${parseFloat('10.00') - parseFloat(token_ui_amount)} more USDC to receive a coupon next time!`
-            }`);
+        const confirmation = {
+          signer: signer_of_transaction,
+          amount: transfered_amount,
+          reference: reference.toBase58(),
         }
-        else {
-            await solanaConnection.removeAccountChangeListener(subscriptionId);
-            qrRef.current?.removeChild(qrRef.current?.firstChild!);
-            setQrActive(false);
-            setCart([]);
-            
-            generateNewReference();
-            setListenForPayment(false);
-            notify(`Transaction verified, you spent ${token_ui_amount} USDC.
-              ${
-                parseFloat(token_ui_amount) >= parseFloat('10.00') ?
-                `You spent ${token_ui_amount} USDC and will receive a coupon!` :
-                `Spend ${parseFloat('10.00') - parseFloat(token_ui_amount)} more USDC to receive a coupon next time!`
-              }`);
-            
-            // disconnect from solanaConnection
-         
 
-              
+        setPaymentConfirmation(confirmation);
+
+      } catch (e) {
+        if (e instanceof FindReferenceError) {
+          // No transaction found yet, ignore this error
+          return;
         }
-      })
+        console.error('Unknown error', e)
+      }
+    }, 500)
+    return () => {
+      clearInterval(interval)
     }
+  }, [solanaConnection, reference])
 
-    executeListener()
+  useEffect(() => {
+    if(!paymentConfirmation) return;
 
-  }, [listenForPayment]);
+    if(
+      parseFloat(paymentConfirmation?.amount) >= parseFloat('10.00')
+    ){
+      console.log('minting coupon')
+      handleCouponMint(paymentConfirmation?.signer!).then((response) => {
+        console.log('response', response)
+      });
+      if(qrRef.current?.firstChild){
+        qrRef.current?.removeChild(qrRef.current?.firstChild!);
+      }
+      setQrActive(false);
+      setCart([]);
+      generateNewReference();
+      setListenForPayment(false);
+      notify(`Transaction verified, you spent ${paymentConfirmation?.amount} USDC.
+        ${
+          parseFloat(paymentConfirmation?.amount) >= parseFloat('10.00') ?
+          `You spent ${paymentConfirmation?.amount} USDC and will receive a coupon!` :
+          `Spend ${parseFloat('10.00') - parseFloat(paymentConfirmation?.amount)} more USDC to receive a coupon next time!`
+        }`);
+    }
+    else {
+      if(qrRef.current?.firstChild){
+        qrRef.current?.removeChild(qrRef.current?.firstChild!);
+      }
+      setQrActive(false);
+      setCart([]);
+
+      generateNewReference();
+      setListenForPayment(false);
+      notify(`Transaction verified, you spent ${paymentConfirmation?.amount} USDC.
+        ${
+          parseFloat(paymentConfirmation?.amount) >= parseFloat('10.00') ?
+          `You spent ${paymentConfirmation?.amount} USDC and will receive a coupon!` :
+          `Spend ${parseFloat('10.00') - parseFloat(paymentConfirmation?.amount)} more USDC to receive a coupon next time!`
+        }`);
+    }
+  }, [paymentConfirmation]);
 
   return (
     <>

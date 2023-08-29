@@ -67,6 +67,7 @@ const collectionMetadataAccount = new PublicKey('G2V3tMRe6U5mSTTCfAfEF8yv4HHL9rY
 const collectionMasterEditionAccount = new PublicKey('8LwT8SmjANsvEH65XLh2XhkN3xcmDF83uhHg6Qq768UD');
 
 let all_asset_ids: PublicKey[] = [];
+let verified_asset_ids: PublicKey[] = [];
 async function generateUrl(
   recipient: PublicKey,
   splToken: PublicKey,
@@ -95,7 +96,7 @@ function get(res: NextApiResponse<MakeTransactionGetResponse>) {
   })
 }
 
-const createCnftTransferInstruction = async (assetIdUserAddress: PublicKey) => {
+const createCnftTransferInstruction = async (assetIdUserAddress: PublicKey, buyerPublicKey: PublicKey) => {
  
     //////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
@@ -127,6 +128,7 @@ const createCnftTransferInstruction = async (assetIdUserAddress: PublicKey) => {
     // const assetIdUserAddress: PublicKey = keys.assetIdUserAddress;
   
     console.log("==== Local PublicKeys loaded ====");
+    console.log("Creating transfer instruction for asset ID:", assetIdUserAddress.toBase58());
     console.log("User Asset ID:", assetIdUserAddress.toBase58());
   
     // set the asset to test with
@@ -152,6 +154,9 @@ const createCnftTransferInstruction = async (assetIdUserAddress: PublicKey) => {
     // ensure the current asset is actually a compressed NFT
     if (!asset.compression.compressed)
       return console.error(`The asset ${asset.id} is NOT a compressed NFT!`);
+
+    if (asset.ownership.owner !== buyerPublicKey.toBase58())
+      return console.error(`The asset ${asset.id} is NOT owned by the buyer!`);
   
     //////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
@@ -283,6 +288,27 @@ const createCnftTransferInstruction = async (assetIdUserAddress: PublicKey) => {
     return transferIx;
   }
 
+
+  const verify_asset_ownership = async (asset: PublicKey, buyerPublicKey: PublicKey) => {
+
+    await connection.getAsset(asset).then(res => {
+
+      // console.log("asset: ", res);
+      console.log("asset.ownership.owner: ", res.ownership.owner);
+      console.log("buyerPublickey", buyerPublicKey.toBase58());
+      if (res.ownership.owner === buyerPublicKey.toBase58()){
+        console.log("asset is owned by buyer*******");
+        verified_asset_ids.push(asset);
+      }
+      else {
+        console.log("mismatch!");
+        // remove it from the list of all_asset_ids
+        all_asset_ids = all_asset_ids.filter(item => item !== asset);
+      }
+    });
+  }
+
+
   const check_for_coupons = async (buyerPublicKey: PublicKey) => {
     const YOUR_WALLET_ADDRESS = buyerPublicKey.toBase58();
     await connection
@@ -307,14 +333,19 @@ const createCnftTransferInstruction = async (assetIdUserAddress: PublicKey) => {
 
           // save the newest assetId locally for the demo
           if (asset.compression.tree === treeAddress.toBase58() && asset.ownership.owner === buyerPublicKey.toBase58())
+            // verify the asset is owned by the current user
+            
             all_asset_ids.push(new PublicKey(asset.id));
         });
     });
 
-      console.log("*******total_cNFts: ", all_asset_ids.length);
+    for (let i = 0; i < all_asset_ids.length; i++) {
+      const asset = all_asset_ids[i];
+      await verify_asset_ownership(asset, buyerPublicKey);
       
-      // if (all_asset_ids.length! >=1){
-    return all_asset_ids;
+    }
+
+    return;
   }
    
 async function post(
@@ -343,7 +374,7 @@ async function post(
     const buyerPublicKey = new PublicKey(account)
     await check_for_coupons(buyerPublicKey);
     let discount = 1;
-    if (all_asset_ids.length! >= 1){
+    if (verified_asset_ids.length! >= 1){
       discount = 0.5;
     } 
 
@@ -362,6 +393,23 @@ async function post(
       // The buyer pays the transaction fee
       feePayer: buyerPublicKey,
     })
+    let verified_discount = 1;
+    // If total_cNFts! >=1, then we need to add the instruction to send the cNFT"s back to shop owner
+    if (verified_asset_ids.length! >=1){  
+      try{
+        // for each asset_id in all_asset_ids, create a transfer instruction and add it to the transaction
+        const transferInstruction = await createCnftTransferInstruction(verified_asset_ids[0], buyerPublicKey);
+        printConsoleSeparator(`Sending the transfer transaction for asset_id: ${verified_asset_ids[0].toBase58()}...`);
+
+        if(transferInstruction) {
+          verified_discount = 0.5;
+          transaction.add(transferInstruction!);
+        }
+      } catch (error) {
+        console.log(error);
+        return res.status(500).json({ error: 'error creating transaction', })
+      }
+    }
 
     // Create the instruction to send USDC from the buyer to the shop
     const transferInstruction = createTransferCheckedInstruction(
@@ -369,7 +417,7 @@ async function post(
       usdcAddress, // mint (token address)
       shopUsdcAddress, // destination
       buyerPublicKey, // owner of source address
-      ((amountBigNumber.toNumber() * (10 ** usdcMint.decimals)) * discount), // amount to transfer (in units of the USDC token)
+      ((amountBigNumber.toNumber() * (10 ** usdcMint.decimals)) * verified_discount), // amount to transfer (in units of the USDC token)
       usdcMint.decimals, // decimals of the USDC token
     )
 
@@ -384,19 +432,6 @@ async function post(
     // Add the instruction to the transaction
     transaction.add(transferInstruction)
 
-     // If total_cNFts! >=1, then we need to add the instruction to send the cNFT"s back to shop owner
-     if (all_asset_ids.length! >=1){  
-      try{
-        // for each asset_id in all_asset_ids, create a transfer instruction and add it to the transaction
-        const transferInstruction = await createCnftTransferInstruction(all_asset_ids[0]);
-        printConsoleSeparator(`Sending the transfer transaction for asset_id: ${all_asset_ids[0].toBase58()}...`);
-        transaction.add(transferInstruction!);
-      } catch (error) {
-        console.log(error);
-        return res.status(500).json({ error: 'error creating transaction', })
-      }
-    }
-
 
     // Serialize the transaction and convert to base64 to return it
     const serializedTransaction = transaction.serialize({
@@ -406,7 +441,7 @@ async function post(
     const base64 = serializedTransaction.toString('base64')
 
     // Insert into database: reference, amount
-    const message = all_asset_ids.length >=1 ? "50% Discount!" : "Thanks for your order! 🤑"
+    const message = verified_discount === 0.5 ? "50% Discount!" : "Thanks for your order! 🤑"
     // Return the serialized transaction
     printConsoleSeparator(`REFERENCE TO MATCH : ${reference}`)
     printConsoleSeparator(`TRANSACTION TO SIGN : ${base64}`)
