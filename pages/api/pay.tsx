@@ -48,46 +48,25 @@ type ErrorOutput = {
 
 
 // CONSTANTS
-const myWallet: string = process.env.NEXT_PUBLIC_STORE_WALLET_ADDRESS!;// Replace with your wallet address (this is the destination where the payment will be sent)
-const shopPublicKey = new PublicKey(myWallet);
-const quicknodeEndpoint: string = process.env.NEXT_PUBLIC_HELIUS_URL!;
+const myWallet : string = process.env.NEXT_PUBLIC_STORE_WALLET_ADDRESS!;// Replace with your wallet address (this is the destination where the payment will be sent)
+const shopPublicKey  = new PublicKey(myWallet);
 const solanaConnection = new Connection(process.env.NEXT_PUBLIC_RPC_URL!, { wsEndpoint: process.env.NEXT_PUBLIC_WS_URL! });
-const devnetConnection = new Connection(process.env.NEXT_PUBLIC_RPC_URL!, 'confirmed');
 const dev_connection = new Connection('https://api.devnet.solana.com', 'confirmed');
 const connection = new WrapperConnection(process.env.NEXT_PUBLIC_RPC_URL!);
 // Get details about the USDC token - Mainnet
 // const usdcAddress = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v');
 // Get details about the USDC token - Devnet
-const usdcAddress=new PublicKey('Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr')
+const usdcAddress =new PublicKey('Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr')
 
-const treeAddress = new PublicKey('BWawQDn2TZBSUKeuNVXswsbfo9ZHCatJPMQ1id22iYH3');
-const treeAuthority = new PublicKey('DKcqk19Zi8Fwcs5Ww7KpPtcvj5MJTJYnjwnYSZyJbAE9');
-const collectionMint = new PublicKey('5nMvk6ij7cddxnuJnrPcEMCBvDyuprgowDoCwejvb3uR');
-const collectionMetadataAccount = new PublicKey('G2V3tMRe6U5mSTTCfAfEF8yv4HHL9rYtpoVWSLa9hWgY');
-const collectionMasterEditionAccount = new PublicKey('8LwT8SmjANsvEH65XLh2XhkN3xcmDF83uhHg6Qq768UD');
+const treeAddress = new PublicKey(process.env.NEXT_PUBLIC_TREE_ADDRESS!);
+const treeAuthority = new PublicKey(process.env.NEXT_PUBLIC_TREE_AUTHORITY!);
+const collectionMint = new PublicKey(process.env.NEXT_PUBLIC_COLLECTION_MINT!);
+const collectionMetadataAccount = new PublicKey(process.env.NEXT_PUBLIC_COLLECTION_METADATA_ACCOUNT!);
+const collectionMasterEditionAccount = new PublicKey(process.env.NEXT_PUBLIC_COLLECTION_MASTER_EDITION_ACCOUNT!);
 
 let all_asset_ids: PublicKey[] = [];
 let verified_asset_ids: PublicKey[] = [];
-async function generateUrl(
-  recipient: PublicKey,
-  splToken: PublicKey,
-  amount: BigNumber,
-  reference: PublicKey,
-  label: string,
-  message: string,
-  memo: string,
-) {
-  const url: URL = encodeURL({
-    recipient,
-    splToken,
-    amount,
-    reference,
-    label,
-    message,
-    memo,
-  });
-  return { url };
-}
+
 
 function get(res: NextApiResponse<MakeTransactionGetResponse>) {
   res.status(200).json({

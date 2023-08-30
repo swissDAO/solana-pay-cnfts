@@ -59,6 +59,7 @@ dotenv.config();
 let initBalance: number, balance: number;
 
 (async () => {
+  try{
   //////////////////////////////////////////////////////////////////////////////
   //////////////////////////////////////////////////////////////////////////////
 
@@ -214,7 +215,6 @@ let initBalance: number, balance: number;
         description: 'swissDAO Loyalty Token!',
         attributes: [
             {trait_type: 'Event', value: 'swissDAO Solana Ecosystem Day'},
-            {trait_type: 'Type', value: 'Loyalty Token'}
         ],
         sellerFeeBasisPoints: 500,//500 bp = 5%
         symbol: 'swissDAO',
@@ -232,7 +232,8 @@ let initBalance: number, balance: number;
         return imgUri;
     }
     
-    const imgUri = await uploadImage(CONFIG.uploadPath, CONFIG.imgFileName);
+    // const imgUri = await uploadImage(CONFIG.uploadPath, CONFIG.imgFileName);
+    const imgUri = 'https://arweave.net/dCcyTFef-Usa4yDaWaSysVJSX_kVnV2YWOsp3Q0XrKU'
 
     console.log('imgUri',imgUri);
 
@@ -301,7 +302,7 @@ let initBalance: number, balance: number;
           },
       });
 
-      console.log(`   Metadata URI:`,uri);
+      console.log(`Metadata URI:`,uri);
       return uri;
     }
 
@@ -332,7 +333,6 @@ let initBalance: number, balance: number;
           share: 100,
         },
       ],
-      // collection publickey  5dTVsx6YanyvugxRnLCZGK3shn1fbjKBUMPzmGHRY99e
       collection: null,
       uses: null,
     },
@@ -366,21 +366,146 @@ let initBalance: number, balance: number;
     Mint a single compressed NFT
   */
 
+  const uploadNFTMetadataURI = async () => {
+    const METAPLEX = Metaplex.make(connection)
+      .use(keypairIdentity(payer))
+      .use(bundlrStorage({
+          address: 'https://devnet.bundlr.network',
+          providerUrl: CLUSTER_URL,
+          timeout: 60000,
+      }));
+    const balance = await connection.getBalance(payer.publicKey);
+    console.log(`Wallet Balance: ${numberFormatter(balance)} SOL`);
+
+    // UPLOAD YOUR OWN METADATA URI
+    const CONFIG = {
+        uploadPath: 'uploads/assets/',
+        imgFileName: 'image.png',
+        imgType: 'image/png',
+        imgName: 'swissDAO Loyalty Token',
+        description: 'swissDAO Loyalty Token!',
+        attributes: [
+            {trait_type: 'Products', value: '0 x 1, 1 x 2'},//Product ID, Quantity --> Product ID should correlate to the product in your database
+            {trait_type: 'Total Amount', value: '15'}, //Total Amount Spent in USDC
+            {trait_type: 'Total Quantity', value: '4'}, //Total Quantity of Products Purchased
+            {trait_type: 'Reference', value: '123456789'}, //Reference Number for the Purchase
+            {trait_type: 'Date', value: new Date().toISOString().slice(0, 10)}, //Date of Purchase
+        ],
+        sellerFeeBasisPoints: 500,//500 bp = 5%
+        symbol: 'swissDAO',
+        creators: [
+            {address: payer.publicKey, share: 100}
+        ]
+    };
+
+    // IF YOU WANT TO UPLOAD AN IMAGE FOR THE NFT, DO SO HERE
+    // async function uploadImage(filePath: string,fileName: string): Promise<string>  {
+    //     console.log(`Step 1 - Uploading Image`);
+    //     const imgBuffer = fs.readFileSync(filePath+fileName);
+    //     const imgMetaplexFile = toMetaplexFile(imgBuffer,fileName);
+
+    //     const imgUri = await METAPLEX.storage().upload(imgMetaplexFile);
+    //     console.log(`   Image URI:`,imgUri);
+    //     return imgUri;
+    // }
+    
+    // const imgUri = await uploadImage(CONFIG.uploadPath, CONFIG.imgFileName);
+
+    // console.log('imgUri',imgUri);
+
+      // SAMPLE URI = {
+      //   "name": "Compressed NFT #1",
+      //   "symbol": "CNFT",
+      //   "description": "Subtle details.",
+      //   "seller_fee_basis_points": 500,
+      //   "image": 
+      // "https://gateway.pinata.cloud/ipfs/QmXdkz86pnGN5DyJEo1J9tmFyz5gRDXZHy67dbcxxCPbEk",
+      //   "attributes": [
+      //     {
+      //       "trait_type": "Weather",
+      //       "value": "Cloudy"
+      //     },
+      //     {
+      //       "trait_type": "Dogs",
+      //       "value": 2
+      //     }
+      //   ],
+      //   "properties": {
+      //     "files": [
+      //       {
+      //         "uri": 
+      // "https://gateway.pinata.cloud/ipfs/QmXdkz86pnGN5DyJEo1J9tmFyz5gRDXZHy67dbcxxCPbEk",
+      //         "type": "image/png"
+      //       }
+      //     ],
+      //     "creators": [
+      //       {
+      //         "address": "5KW2twHzRsAaiLeEx4zYNV35CV2hRrZGw7NYbwMfL4a2",
+      //         "share": 80
+      //       },
+      //       {
+      //         "address": "3yTKSCKoDcjBFpbgxyJUh4cM1NG77gFXBimkVBx2hKrf",
+      //         "share": 20
+      //       }
+      //     ]
+      //   }
+      // }
+    const imgUri = 'https://arweave.net/dCcyTFef-Usa4yDaWaSysVJSX_kVnV2YWOsp3Q0XrKU'
+
+    async function uploadMetadata(imgUri: string, imgType: string, nftName: string, description: string, attributes: {trait_type: string, value: string}[]) {
+      console.log(`Step 2 - Uploading Metadata`);
+      const { uri } = await METAPLEX
+      .nfts()
+      .uploadMetadata({
+          name: CONFIG.imgName,
+          description: CONFIG.description,
+          image: imgUri,
+          sellerFeeBasisPoints: CONFIG.sellerFeeBasisPoints,
+          symbol: CONFIG.symbol,
+          attributes: CONFIG.attributes,
+          properties: {
+            files: [
+              {
+                uri: imgUri,
+                type: CONFIG.imgType,
+              },
+            ],
+            creators: [
+              {
+                address: payer.publicKey.toBase58(),
+                share: 100,
+              },
+            ],
+          },
+      });
+
+      console.log(`Metadata URI:`,uri);
+      return uri;
+    }
+
+    const metadataUri = await uploadMetadata(
+        imgUri, 
+        CONFIG.imgType, 
+        CONFIG.imgName, 
+        CONFIG.description,
+        CONFIG.attributes
+    );
+
+    return metadataUri;
+  }
+
+  const nft_metadata_uri = await uploadNFTMetadataURI();
+
   const compressedNFTMetadata: MetadataArgs = {
     name: "NFT Name",
     symbol: collectionMetadataV3.data.symbol,
     // specific json metadata for each NFT
-    uri: "https://arweave.net/JiOJfjh6IbfJIMNTwPiFr9PhuYHJLuVdmDV5GLCYPwk",
+    uri: nft_metadata_uri,
     creators: [
       {
         address: payer.publicKey,
         verified: false,
         share: 100,
-      },
-      {
-        address: testWallet.publicKey,
-        verified: false,
-        share: 0,
       },
     ], // or set to null
     editionNonce: 0,
@@ -436,5 +561,9 @@ let initBalance: number, balance: number;
     numberFormatter((initBalance - balance) / LAMPORTS_PER_SOL, true),
     "SOL\n",
   );
+
+  } catch (error) {
+    console.error(error);
+  }
 
 })();

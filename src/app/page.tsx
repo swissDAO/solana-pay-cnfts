@@ -105,12 +105,12 @@ export default function Home() {
   };
 
   const handleCouponMint = async (buyer: string) => {
+    const cart_as_string = cart.map((item) => `${item.id} x ${item.quantity}`).join(', '); 
     if(!buyer) return;
     // 1 - Send a POST request to our backend with the buyer's public key
     const CONFIG = { 
       buyerPublicKey: buyer,
-      // format products to be [(product, quantity), (product, quantity]
-      products: order?.products.map((product) => [product.id, product.quantity]),
+      products: cart_as_string,
       amount: paymentConfirmation?.amount,
       reference: paymentConfirmation?.reference, 
     };
@@ -127,7 +127,6 @@ export default function Home() {
     const response_status = res.status;
     if(response_status === 200) {
       console.log('coupon minted');
-      console.log('response', res);
     }
  
     return ;
@@ -182,9 +181,7 @@ export default function Home() {
       parseFloat(paymentConfirmation?.amount) >= parseFloat('10.00')
     ){
       console.log('minting coupon')
-      handleCouponMint(paymentConfirmation?.signer!).then((response) => {
-        console.log('response', response)
-      });
+      handleCouponMint(paymentConfirmation?.signer!)
       if(qrRef.current?.firstChild){
         qrRef.current?.removeChild(qrRef.current?.firstChild!);
       }

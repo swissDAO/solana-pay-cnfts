@@ -19,210 +19,206 @@ dotenv.config();
 export default async function handler(req: NextApiRequest, res: NextApiResponse) {
     //Handle POST requests to issue a coupon
     if (req.method === 'POST') {
-        try{
-            const CLUSTER_URL = process.env.NEXT_PUBLIC_RPC_URL!;
-            const connection = new Connection(CLUSTER_URL, 'confirmed');
-            const { buyerPublicKey, products, amount, reference } = req.body;
-            console.log('buyerPublicKey',buyerPublicKey);
-            console.log('products',products);
-            console.log('amount',amount);
-            console.log('reference',reference);
+      try{
+          const CLUSTER_URL = process.env.NEXT_PUBLIC_RPC_URL!;
+          const connection = new Connection(CLUSTER_URL, 'confirmed');
+          const { buyerPublicKey, products, amount, reference } = req.body;
+          console.log('buyerPublicKey',buyerPublicKey);
+          console.log('products',products);
+          console.log('amount',amount);
+          console.log('reference',reference);
 
-            // USE THIS IN PRODUCTION
-            const keyfileBytes = await JSON.parse(process.env.NEXT_PUBLIC_DEMO_KEY!);
-            // parse the loaded secretKey into a valid keypair
-            const payer = Keypair.fromSecretKey(Uint8Array.from(keyfileBytes!));
+          // USE THIS IN PRODUCTION
+          const keyfileBytes = await JSON.parse(process.env.NEXT_PUBLIC_DEMO_KEY!);
+          // parse the loaded secretKey into a valid keypair
+          const payer = Keypair.fromSecretKey(Uint8Array.from(keyfileBytes!));
 
+          console.log('creator wallet address', payer.publicKey.toBase58());
+        
+          const treeAddress = new PublicKey(process.env.NEXT_PUBLIC_TREE_ADDRESS!);
+          const treeAuthority = new PublicKey(process.env.NEXT_PUBLIC_TREE_AUTHORITY!);
+          const collectionMint = new PublicKey(process.env.NEXT_PUBLIC_COLLECTION_MINT!);
+          const collectionMetadataAccount = new PublicKey(process.env.NEXT_PUBLIC_COLLECTION_METADATA_ACCOUNT!);
+          const collectionMasterEditionAccount = new PublicKey(process.env.NEXT_PUBLIC_COLLECTION_MASTER_EDITION_ACCOUNT!);
 
-            console.log('creator wallet address', payer.publicKey.toBase58());
-            
-
-
-            const treeAddress = new PublicKey(process.env.NEXT_PUBLIC_TREE_ADDRESS!);
-            const treeAuthority = new PublicKey(process.env.NEXT_PUBLIC_TREE_AUTHORITY!);
-            const collectionMint = new PublicKey(process.env.NEXT_PUBLIC_COLLECTION_MINT!);
-            const collectionMetadataAccount = new PublicKey(process.env.NEXT_PUBLIC_COLLECTION_METADATA_ACCOUNT!);
-            const collectionMasterEditionAccount = new PublicKey(process.env.NEXT_PUBLIC_COLLECTION_MASTER_EDITION_ACCOUNT!);
-
-            // create the metadata for the compressed NFT************************************************************************
-            async function createCollectionNftURI() {
-                // airdrop SOL to the wallet
-                // await SOLANA_CONNECTION.requestAirdrop(WALLET.publicKey, 1000000000);
-                // wait for the balance to update
-                // await new Promise((resolve) => setTimeout(resolve, 1000));
-                // get the wallet's balance
-                const METAPLEX = Metaplex.make(connection)
-                  .use(keypairIdentity(payer))
-                  .use(bundlrStorage({
-                      address: 'https://devnet.bundlr.network',
-                      providerUrl: CLUSTER_URL,
-                      timeout: 60000,
-                  }));
-                const balance = await connection.getBalance(payer.publicKey);
-                console.log(`Wallet Balance: ${numberFormatter(balance)} SOL`);
-            
-                // UPLOAD YOUR OWN METADATA URI
-                const CONFIG = {
-                    uploadPath: 'uploads/assets/',
-                    imgFileName: 'image.png',
-                    imgType: 'image/png',
-                    imgName: 'swissDAO Loyalty Token',
-                    description: 'swissDAO Loyalty Token!',
-                    attributes: [
-                        {trait_type: 'Event', value: 'swissDAO Solana Ecosystem Day'},
-                        {trait_type: 'Date', value: new Date().toISOString().slice(0, 10)},
-                        {trait_type: 'Products', value: products},
-                        {trait_type: 'Amount', value: amount},
-                        {trait_type: 'Reference', value: reference},
-                    ],
-                    sellerFeeBasisPoints: 500,//500 bp = 5%
-                    symbol: 'swissDAO',
-                    creators: [
-                        {address: payer.publicKey, share: 100},  // store as creator
-                        {address: new PublicKey(buyerPublicKey), share: 0} // buyerPublicKey as reference to see who made original purchase
-                    ]
-                };
-                
-                // REPLACE WITH THE IMAGE YOU WANT ON YOUR NFT
-                const imgUri = 'https://arweave.net/dCcyTFef-Usa4yDaWaSysVJSX_kVnV2YWOsp3Q0XrKU'
-            
-            
-                  // SAMPLE URI = {
-                  //   "name": "Compressed NFT #1",
-                  //   "symbol": "CNFT",
-                  //   "description": "Subtle details.",
-                  //   "seller_fee_basis_points": 500,
-                  //   "image": 
-                  // "https://gateway.pinata.cloud/ipfs/QmXdkz86pnGN5DyJEo1J9tmFyz5gRDXZHy67dbcxxCPbEk",
-                  //   "attributes": [
-                  //     {
-                  //       "trait_type": "Weather",
-                  //       "value": "Cloudy"
-                  //     },
-                  //     {
-                  //       "trait_type": "Dogs",
-                  //       "value": 2
-                  //     }
-                  //   ],
-                  //   "properties": {
-                  //     "files": [
-                  //       {
-                  //         "uri": 
-                  // "https://gateway.pinata.cloud/ipfs/QmXdkz86pnGN5DyJEo1J9tmFyz5gRDXZHy67dbcxxCPbEk",
-                  //         "type": "image/png"
-                  //       }
-                  //     ],
-                  //     "creators": [
-                  //       {
-                  //         "address": "5KW2twHzRsAaiLeEx4zYNV35CV2hRrZGw7NYbwMfL4a2",
-                  //         "share": 80
-                  //       },
-                  //       {
-                  //         "address": "3yTKSCKoDcjBFpbgxyJUh4cM1NG77gFXBimkVBx2hKrf",
-                  //         "share": 20
-                  //       }
-                  //     ]
-                  //   }
-                  // }
-            
-                async function uploadMetadata(imgUri: string, imgType: string, nftName: string, description: string, attributes: {trait_type: string, value: string}[]) {
-                  console.log(`Step 2 - Uploading Metadata`);
-                  const { uri } = await METAPLEX
-                  .nfts()
-                  .uploadMetadata({
-                      name: CONFIG.imgName,
-                      description: CONFIG.description,
-                      image: imgUri,
-                      sellerFeeBasisPoints: CONFIG.sellerFeeBasisPoints,
-                      symbol: CONFIG.symbol,
-                      attributes: CONFIG.attributes,
-                      properties: {
-                        files: [
-                          {
-                            uri: imgUri,
-                            type: CONFIG.imgType,
-                          },
-                        ],
-                        creators: [
-                          {
-                            address: payer.publicKey.toBase58(),
-                            share: 100,
-                          },
-                        ],
-                      },
-                  });
-            
-                  console.log(`   Metadata URI:`,uri);
-                  return uri;
-                }
-            
-                const metadataUri = await uploadMetadata(
-                    imgUri, 
-                    CONFIG.imgType, 
-                    CONFIG.imgName, 
-                    CONFIG.description,
-                    CONFIG.attributes
-                );
-            
-                console.log('metadataUri',metadataUri);
-                return metadataUri;
-              } 
-              const metadataUri = await createCollectionNftURI();
-
-            // ******************************************************************************************************************
-            
-            const compressedNFTMetadata: MetadataArgs = {
-                name: "swissDAO Receipt",
-                symbol: "swissDAO",
-                // specific json metadata for each NFT
-                uri: metadataUri,
-                sellerFeeBasisPoints: 100,
-                creators: [
-                {
-                    address: payer.publicKey,
-                    verified: false,
-                    share: 100,
-                },
-                {
-                    address: new PublicKey(buyerPublicKey),
-                    verified: false,
-                    share: 0,
-                },
-                ],
-                editionNonce: 0,
-                uses: null,
-                collection: null,
-                primarySaleHappened: false,
-                isMutable: true,
-                // values taken from the Bubblegum package
-                tokenProgramVersion: TokenProgramVersion.Original,
-                tokenStandard: TokenStandard.NonFungible,
-            };
-
-            // fully mint a single compressed NFT to the payer
-            console.log(`Minting a single compressed NFT to ${buyerPublicKey}...`);
-
-            await mintCompressedNFT(
-                connection,
-                payer,
-                treeAddress,
-                collectionMint,
-                collectionMetadataAccount,
-                collectionMasterEditionAccount,
-                compressedNFTMetadata,
-                // mint to this specific wallet (in this case, the tree owner aka `payer`)
-                new PublicKey(buyerPublicKey),
+          // create the metadata for the compressed NFT************************************************************************
+          async function createCollectionNftURI() {
+              // airdrop SOL to the wallet
+              // await SOLANA_CONNECTION.requestAirdrop(WALLET.publicKey, 1000000000);
+              // wait for the balance to update
+              // await new Promise((resolve) => setTimeout(resolve, 1000));
+              // get the wallet's balance
+              const METAPLEX = Metaplex.make(connection)
+                .use(keypairIdentity(payer))
+                .use(bundlrStorage({
+                    address: 'https://devnet.bundlr.network',
+                    providerUrl: CLUSTER_URL,
+                    timeout: 60000,
+                }));
+              const balance = await connection.getBalance(payer.publicKey);
+              console.log(`Wallet Balance: ${numberFormatter(balance)} SOL`);
+          
+              // UPLOAD YOUR OWN METADATA URI
+              const CONFIG = {
+                  uploadPath: 'uploads/assets/',
+                  imgFileName: 'image.png',
+                  imgType: 'image/png',
+                  imgName: 'swissDAO Loyalty Token',
+                  description: 'swissDAO Loyalty Token!',
+                  attributes: [
+                      {trait_type: 'Date', value: new Date().toISOString().slice(0, 10)},
+                      {trait_type: 'Products', value: products},
+                      {trait_type: 'Amount', value: amount},
+                      {trait_type: 'Reference', value: reference},
+                  ],
+                  sellerFeeBasisPoints: 500,//500 bp = 5%
+                  symbol: 'swissDAO',
+                  creators: [
+                      {address: payer.publicKey, share: 100},  // store as creator
+                      {address: new PublicKey(buyerPublicKey), share: 0} // buyerPublicKey as reference to see who made original purchase
+                  ]
+              };
+              
+              // REPLACE WITH THE IMAGE YOU WANT ON YOUR NFT
+              const imgUri = 'https://arweave.net/dCcyTFef-Usa4yDaWaSysVJSX_kVnV2YWOsp3Q0XrKU'
+          
+          
+                // SAMPLE URI = {
+                //   "name": "Compressed NFT #1",
+                //   "symbol": "CNFT",
+                //   "description": "Subtle details.",
+                //   "seller_fee_basis_points": 500,
+                //   "image": 
+                // "https://gateway.pinata.cloud/ipfs/QmXdkz86pnGN5DyJEo1J9tmFyz5gRDXZHy67dbcxxCPbEk",
+                //   "attributes": [
+                //     {
+                //       "trait_type": "Weather",
+                //       "value": "Cloudy"
+                //     },
+                //     {
+                //       "trait_type": "Dogs",
+                //       "value": 2
+                //     }
+                //   ],
+                //   "properties": {
+                //     "files": [
+                //       {
+                //         "uri": 
+                // "https://gateway.pinata.cloud/ipfs/QmXdkz86pnGN5DyJEo1J9tmFyz5gRDXZHy67dbcxxCPbEk",
+                //         "type": "image/png"
+                //       }
+                //     ],
+                //     "creators": [
+                //       {
+                //         "address": "5KW2twHzRsAaiLeEx4zYNV35CV2hRrZGw7NYbwMfL4a2",
+                //         "share": 80
+                //       },
+                //       {
+                //         "address": "3yTKSCKoDcjBFpbgxyJUh4cM1NG77gFXBimkVBx2hKrf",
+                //         "share": 20
+                //       }
+                //     ]
+                //   }
+                // }
+          
+              async function uploadMetadata(imgUri: string, imgType: string, nftName: string, description: string, attributes: {trait_type: string, value: string}[]) {
+                console.log(`Step 2 - Uploading Metadata`);
+                const { uri } = await METAPLEX
+                .nfts()
+                .uploadMetadata({
+                    name: CONFIG.imgName,
+                    description: CONFIG.description,
+                    image: imgUri,
+                    sellerFeeBasisPoints: CONFIG.sellerFeeBasisPoints,
+                    symbol: CONFIG.symbol,
+                    attributes: CONFIG.attributes,
+                    properties: {
+                      files: [
+                        {
+                          uri: imgUri,
+                          type: CONFIG.imgType,
+                        },
+                      ],
+                      creators: [
+                        {
+                          address: payer.publicKey.toBase58(),
+                          share: 100,
+                        },
+                      ],
+                    },
+                });
+          
+                console.log(`   Metadata URI:`,uri);
+                return uri;
+              }
+          
+              const metadataUri = await uploadMetadata(
+                  imgUri, 
+                  CONFIG.imgType, 
+                  CONFIG.imgName, 
+                  CONFIG.description,
+                  CONFIG.attributes
               );
-              console.log("\nSuccessfully minted the compressed NFT!");
-            //   return status: success and the txSignature
-            return res.status(200).json(
-                {
-                    status: 'success'
-                }
-            )
-        } catch (error) {
-            console.log(error);
-            return res.status(500).json({ status: 'error' })
-        }
+          
+              console.log('metadataUri',metadataUri);
+              return metadataUri;
+            } 
+            const metadataUri = await createCollectionNftURI();
+
+          // ******************************************************************************************************************
+          
+          const compressedNFTMetadata: MetadataArgs = {
+              name: "swissDAO Receipt",
+              symbol: "swissDAO",
+              // specific json metadata for each NFT
+              uri: metadataUri,
+              sellerFeeBasisPoints: 100,
+              creators: [
+              {
+                  address: payer.publicKey,
+                  verified: false,
+                  share: 100,
+              },
+              {
+                  address: new PublicKey(buyerPublicKey),
+                  verified: false,
+                  share: 0,
+              },
+              ],
+              editionNonce: 0,
+              uses: null,
+              collection: null,
+              primarySaleHappened: false,
+              isMutable: true,
+              // values taken from the Bubblegum package
+              tokenProgramVersion: TokenProgramVersion.Original,
+              tokenStandard: TokenStandard.NonFungible,
+          };
+
+          // fully mint a single compressed NFT to the payer
+          console.log(`Minting a single compressed NFT to ${buyerPublicKey}...`);
+
+          await mintCompressedNFT(
+              connection,
+              payer,
+              treeAddress,
+              collectionMint,
+              collectionMetadataAccount,
+              collectionMasterEditionAccount,
+              compressedNFTMetadata,
+              // mint to this specific wallet (in this case, the tree owner aka `payer`)
+              new PublicKey(buyerPublicKey),
+            );
+            console.log("\nSuccessfully minted the compressed NFT!");
+          //   return status: success and the txSignature
+          return res.status(200).json(
+              {
+                  status: 'success'
+              }
+          )
+      } catch (error) {
+          console.log(error);
+          return res.status(500).json({ status: 'error' })
+      }
     } 
 }

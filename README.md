@@ -67,7 +67,9 @@ Copy the forwarding address in your terminal and paste in your browser.
 ## Credits
 
 Callum McIntyre - Solana Pay Build on Pointer.GG (https://www.pointer.gg/tutorials/solana-pay-irl-payments/)
+
 Raza - Solana Pay Build on buildspace.so (https://buildspace.so/builds/solana-pay)
+
 Nick Frosty - Compressed NFT's on Solana repo (https://github.com/solana-developers/compressed-nfts)
 
 ## License
@@ -75,7 +77,8 @@ Nick Frosty - Compressed NFT's on Solana repo (https://github.com/solana-develop
 
 
 ### Todo List
-- [❌] Figure out why 3 txn's crash the app, is it RPC upates on the cNFT transfers?
-- [❌] Dynamically update the cNFT metadata to reflect the detailes of transaction (ie. line items, points, etc.)
-- [❌] Find less RPC intensive way to verify txn??
+- [✅] Figure out why 3 txn's crash the app, is it RPC upates on the cNFT transfers?
+- [✅] Dynamically update the cNFT metadata to reflect the detailes of transaction (ie. line items, points, etc.)
+- [✅] Find less RPC intensive way to verify txn??
+- [❌] Create instructions to mint 2 cNFT's, one for the Receipt and one for the Coupon.. better coupon attribute structure?
 - [❌] Add a backend to store orders and provide a way to query them
