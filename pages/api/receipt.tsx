@@ -22,8 +22,10 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
       try{
           const CLUSTER_URL = process.env.NEXT_PUBLIC_RPC_URL!;
           const connection = new Connection(CLUSTER_URL, 'confirmed');
-          const { buyerPublicKey, reference } = req.body;
+          const { buyerPublicKey, products, amount, reference } = req.body;
           console.log('buyerPublicKey',buyerPublicKey);
+          console.log('products',products);
+          console.log('amount',amount);
           console.log('reference',reference);
 
           // USE THIS IN PRODUCTION
@@ -33,11 +35,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
           console.log('creator wallet address', payer.publicKey.toBase58());
         
-          const couponTreeAddress = new PublicKey(process.env.NEXT_PUBLIC_RECEIPT_TREE_ADDRESS!);
-          const couponTreeAuthority = new PublicKey(process.env.NEXT_PUBLIC_RECEIPT_TREE_AUTHORITY!);
-          const couponCollectionMint = new PublicKey(process.env.NEXT_PUBLIC_RECEIPT_COLLECTION_MINT!);
-          const couponCollectionMetadataAccount = new PublicKey(process.env.NEXT_PUBLIC_RECEIPT_COLLECTION_METADATA_ACCOUNT!);
-          const couponCollectionMasterEditionAccount = new PublicKey(process.env.NEXT_PUBLIC_RECEIPT_COLLECTION_MASTER_EDITION_ACCOUNT!);
+          const receiptTreeAddress = new PublicKey(process.env.NEXT_PUBLIC_RECEIPT_TREE_ADDRESS!);
+          const receiptTreeAuthority = new PublicKey(process.env.NEXT_PUBLIC_RECEIPT_TREE_AUTHORITY!);
+          const receiptCollectionMint = new PublicKey(process.env.NEXT_PUBLIC_RECEIPT_COLLECTION_MINT!);
+          const receiptCollectionMetadataAccount = new PublicKey(process.env.NEXT_PUBLIC_RECEIPT_COLLECTION_METADATA_ACCOUNT!);
+          const receiptCollectionMasterEditionAccount = new PublicKey(process.env.NEXT_PUBLIC_RECEIPT_COLLECTION_MASTER_EDITION_ACCOUNT!);
 
           // create the metadata for the compressed NFT************************************************************************
           async function createCollectionNftURI() {
@@ -61,12 +63,13 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                   uploadPath: 'uploads/assets/',
                   imgFileName: 'image.png',
                   imgType: 'image/png',
-                  imgName: 'swissDAO Coupon',
-                  description: 'swissDAO Coupon for your purchase.',
+                  imgName: 'swissDAO Receipt Token',
+                  description: 'swissDAO Receipt for your purchase.',
                   attributes: [
                       {trait_type: 'Date', value: new Date().toISOString().slice(0, 10)},
+                      {trait_type: 'Products', value: products},
+                      {trait_type: 'Amount', value: amount},
                       {trait_type: 'Reference', value: reference},
-                      {trait_type: 'Original Buyer', value: buyerPublicKey},
                   ],
                   sellerFeeBasisPoints: 500,//500 bp = 5%
                   symbol: 'swissDAO',
@@ -126,14 +129,14 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
                 .uploadMetadata({
                     name: CONFIG.imgName,
                     description: CONFIG.description,
-                    image: couponImgUri,
+                    image: receiptImgUri,
                     sellerFeeBasisPoints: CONFIG.sellerFeeBasisPoints,
                     symbol: CONFIG.symbol,
                     attributes: CONFIG.attributes,
                     properties: {
                       files: [
                         {
-                          uri: couponImgUri,
+                          uri: receiptImgUri,
                           type: CONFIG.imgType,
                         },
                       ],
@@ -151,7 +154,7 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
               }
           
               const metadataUri = await uploadMetadata(
-                  couponImgUri, 
+                  receiptImgUri, 
                   CONFIG.imgType, 
                   CONFIG.imgName, 
                   CONFIG.description,
@@ -194,15 +197,15 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
           };
 
           // fully mint a single compressed NFT to the payer
-          console.log(`Minting a single compressed NFT to ${buyerPublicKey}...`);
+          console.log(`Minting a single receipt compressed NFT to ${buyerPublicKey}...`);
 
           await mintCompressedNFT(
               connection,
               payer,
-              couponTreeAddress,
-              couponCollectionMint,
-              couponCollectionMetadataAccount,
-              couponCollectionMasterEditionAccount,
+              receiptTreeAddress,
+              receiptCollectionMint,
+              receiptCollectionMetadataAccount,
+              receiptCollectionMasterEditionAccount,
               compressedNFTMetadata,
               // mint to this specific wallet (in this case, the tree owner aka `payer`)
               new PublicKey(buyerPublicKey),

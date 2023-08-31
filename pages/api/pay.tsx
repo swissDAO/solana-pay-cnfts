@@ -58,11 +58,11 @@ const connection = new WrapperConnection(process.env.NEXT_PUBLIC_RPC_URL!);
 // Get details about the USDC token - Devnet
 const usdcAddress =new PublicKey('Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr')
 
-const treeAddress = new PublicKey(process.env.NEXT_PUBLIC_TREE_ADDRESS!);
-const treeAuthority = new PublicKey(process.env.NEXT_PUBLIC_TREE_AUTHORITY!);
-const collectionMint = new PublicKey(process.env.NEXT_PUBLIC_COLLECTION_MINT!);
-const collectionMetadataAccount = new PublicKey(process.env.NEXT_PUBLIC_COLLECTION_METADATA_ACCOUNT!);
-const collectionMasterEditionAccount = new PublicKey(process.env.NEXT_PUBLIC_COLLECTION_MASTER_EDITION_ACCOUNT!);
+const treeAddress = new PublicKey(process.env.NEXT_PUBLIC_COUPON_TREE_ADDRESS!);
+const treeAuthority = new PublicKey(process.env.NEXT_PUBLIC_COUPON_TREE_AUTHORITY!);
+const collectionMint = new PublicKey(process.env.NEXT_PUBLIC_COUPON_COLLECTION_MINT!);
+const collectionMetadataAccount = new PublicKey(process.env.NEXT_PUBLIC_COUPON_COLLECTION_METADATA_ACCOUNT!);
+const collectionMasterEditionAccount = new PublicKey(process.env.NEXT_PUBLIC_COUPON_COLLECTION_MASTER_EDITION_ACCOUNT!);
 
 let all_asset_ids: PublicKey[] = [];
 let verified_asset_ids: PublicKey[] = [];
@@ -89,22 +89,6 @@ const createCnftTransferInstruction = async (assetIdUserAddress: PublicKey, buye
     //////////////////////////////////////////////////////////////////////////////
     //////////////////////////////////////////////////////////////////////////////
   
-
-  
-    // load the stored PublicKeys for ease of use
-    // let keys = loadPublicKeysFromFile();
-
-    
-    let keys = {
-        treeAddress: new PublicKey(treeAddress),
-        treeAuthority: new PublicKey(treeAuthority),
-        collectionMint: new PublicKey(collectionMint),
-        collectionMetadataAccount: new PublicKey(collectionMetadataAccount),
-        collectionMasterEditionAccount: new PublicKey(collectionMasterEditionAccount),
-    };
-  
-
-    // const assetIdUserAddress: PublicKey = keys.assetIdUserAddress;
   
     console.log("==== Local PublicKeys loaded ====");
     console.log("Creating transfer instruction for asset ID:", assetIdUserAddress.toBase58());

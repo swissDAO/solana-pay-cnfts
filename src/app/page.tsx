@@ -104,7 +104,7 @@ export default function Home() {
     setListenForPayment(true);
   };
 
-  const handleCouponMint = async (buyer: string) => {
+  const handleReceiptMint = async (buyer: string) => {
     const cart_as_string = cart.map((item) => `${item.id} x ${item.quantity}`).join(', '); 
     if(!buyer) return;
     // 1 - Send a POST request to our backend with the buyer's public key
@@ -112,6 +112,31 @@ export default function Home() {
       buyerPublicKey: buyer,
       products: cart_as_string,
       amount: paymentConfirmation?.amount,
+      reference: paymentConfirmation?.reference, 
+    };
+    const res = await fetch(
+      '/api/receipt',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(CONFIG),
+      }
+    );
+    const response_status = res.status;
+    if(response_status === 200) {
+      console.log('coupon minted');
+    }
+ 
+    return ;
+  };
+
+  const handleCouponMint = async (buyer: string) => {
+    if(!buyer) return;
+    // 1 - Send a POST request to our backend with the buyer's public key
+    const CONFIG = { 
+      buyerPublicKey: buyer,
       reference: paymentConfirmation?.reference, 
     };
     const res = await fetch(
@@ -126,7 +151,7 @@ export default function Home() {
     );
     const response_status = res.status;
     if(response_status === 200) {
-      console.log('coupon minted');
+      console.log('receipt minted');
     }
  
     return ;
@@ -176,7 +201,8 @@ export default function Home() {
 
   useEffect(() => {
     if(!paymentConfirmation) return;
-
+    console.log('payment confirmed, minting receipt')
+    handleReceiptMint(paymentConfirmation?.signer!);
     if(
       parseFloat(paymentConfirmation?.amount) >= parseFloat('10.00')
     ){

@@ -208,19 +208,19 @@ let initBalance: number, balance: number;
 
     // UPLOAD YOUR OWN METADATA URI
     const CONFIG = {
-        uploadPath: 'uploads/assets/',
-        imgFileName: 'image.png',
-        imgType: 'image/png',
-        imgName: 'swissDAO Loyalty Token',
-        description: 'swissDAO Loyalty Token!',
-        attributes: [
-            {trait_type: 'Event', value: 'swissDAO Solana Ecosystem Day'},
-        ],
-        sellerFeeBasisPoints: 500,//500 bp = 5%
-        symbol: 'swissDAO',
-        creators: [
-            {address: payer.publicKey, share: 100}
-        ]
+      uploadPath: 'uploads/assets/',
+      imgFileName: 'couponImage.png',
+      imgType: 'image/png',
+      imgName: 'swissDAO Coupon Token',
+      description: 'swissDAO Coupon Token!',
+      attributes: [
+          {trait_type: 'Event', value: 'swissDAO Solana Ecosystem Day'},
+      ],
+      sellerFeeBasisPoints: 500,//500 bp = 5%
+      symbol: 'swissDAO',
+      creators: [
+          {address: payer.publicKey, share: 100}
+      ]
     };
     async function uploadImage(filePath: string,fileName: string): Promise<string>  {
         console.log(`Step 1 - Uploading Image`);
@@ -232,8 +232,8 @@ let initBalance: number, balance: number;
         return imgUri;
     }
     
-    // const imgUri = await uploadImage(CONFIG.uploadPath, CONFIG.imgFileName);
-    const imgUri = 'https://arweave.net/dCcyTFef-Usa4yDaWaSysVJSX_kVnV2YWOsp3Q0XrKU'
+    const imgUri = await uploadImage(CONFIG.uploadPath, CONFIG.imgFileName);
+    // const imgUri = 'https://arweave.net/dCcyTFef-Usa4yDaWaSysVJSX_kVnV2YWOsp3Q0XrKU'
 
     console.log('imgUri',imgUri);
 
@@ -378,24 +378,19 @@ let initBalance: number, balance: number;
     console.log(`Wallet Balance: ${numberFormatter(balance)} SOL`);
 
     // UPLOAD YOUR OWN METADATA URI
-    const CONFIG = {
-        uploadPath: 'uploads/assets/',
-        imgFileName: 'image.png',
-        imgType: 'image/png',
-        imgName: 'swissDAO Loyalty Token',
-        description: 'swissDAO Loyalty Token!',
-        attributes: [
-            {trait_type: 'Products', value: '0 x 1, 1 x 2'},//Product ID, Quantity --> Product ID should correlate to the product in your database
-            {trait_type: 'Total Amount', value: '15'}, //Total Amount Spent in USDC
-            {trait_type: 'Total Quantity', value: '4'}, //Total Quantity of Products Purchased
-            {trait_type: 'Reference', value: '123456789'}, //Reference Number for the Purchase
-            {trait_type: 'Date', value: new Date().toISOString().slice(0, 10)}, //Date of Purchase
-        ],
-        sellerFeeBasisPoints: 500,//500 bp = 5%
-        symbol: 'swissDAO',
-        creators: [
-            {address: payer.publicKey, share: 100}
-        ]
+    const NFT_CONFIG = {
+      name: 'swissDAO Coupon Token',
+      description: 'Coupon token for your purchase!',
+      attributes: [
+          {trait_type: 'Original Buyer', value: testWallet.publicKey.toBase58()}, //Wallet Address of the Original Buyer
+          {trait_type: 'Reference', value: '123456789'}, //Reference Number for the Purchase
+          {trait_type: 'Date', value: new Date().toISOString().slice(0, 10)}, //Date of Purchase
+      ],
+      sellerFeeBasisPoints: 500,//500 bp = 5%
+      symbol: 'swissDAO',
+      creators: [
+          {address: payer.publicKey, share: 100}
+      ]
     };
 
     // IF YOU WANT TO UPLOAD AN IMAGE FOR THE NFT, DO SO HERE
@@ -457,17 +452,17 @@ let initBalance: number, balance: number;
       const { uri } = await METAPLEX
       .nfts()
       .uploadMetadata({
-          name: CONFIG.imgName,
-          description: CONFIG.description,
+          name: NFT_CONFIG.name,
+          description: NFT_CONFIG.description,
           image: imgUri,
-          sellerFeeBasisPoints: CONFIG.sellerFeeBasisPoints,
-          symbol: CONFIG.symbol,
-          attributes: CONFIG.attributes,
+          sellerFeeBasisPoints: NFT_CONFIG.sellerFeeBasisPoints,
+          symbol: NFT_CONFIG.symbol,
+          attributes: NFT_CONFIG.attributes,
           properties: {
             files: [
               {
                 uri: imgUri,
-                type: CONFIG.imgType,
+                type: 'image/png',
               },
             ],
             creators: [
@@ -485,10 +480,10 @@ let initBalance: number, balance: number;
 
     const metadataUri = await uploadMetadata(
         imgUri, 
-        CONFIG.imgType, 
-        CONFIG.imgName, 
-        CONFIG.description,
-        CONFIG.attributes
+        'image/png', 
+        NFT_CONFIG.name, 
+        NFT_CONFIG.description,
+        NFT_CONFIG.attributes
     );
 
     return metadataUri;
@@ -497,7 +492,7 @@ let initBalance: number, balance: number;
   const nft_metadata_uri = await uploadNFTMetadataURI();
 
   const compressedNFTMetadata: MetadataArgs = {
-    name: "NFT Name",
+    name: collectionMetadataV3.data.name,
     symbol: collectionMetadataV3.data.symbol,
     // specific json metadata for each NFT
     uri: nft_metadata_uri,
@@ -520,7 +515,7 @@ let initBalance: number, balance: number;
   };
 
   // fully mint a single compressed NFT to the payer
-  console.log(`Minting a single compressed NFT to ${payer.publicKey.toBase58()}...`);
+  console.log(`Minting a single receipt compressed NFT to ${payer.publicKey.toBase58()}...`);
 
   await mintCompressedNFT(
     connection,
@@ -535,7 +530,7 @@ let initBalance: number, balance: number;
   );
 
   // fully mint a single compressed NFT
-  console.log(`Minting a single compressed NFT to ${testWallet.publicKey.toBase58()}...`);
+  console.log(`Minting a single receipt compressed NFT to ${testWallet.publicKey.toBase58()}...`);
 
   await mintCompressedNFT(
     connection,
@@ -557,10 +552,11 @@ let initBalance: number, balance: number;
 
   console.log(`===============================`);
   console.log(
-    "Total cost:",
+    "Total cost for Coupons:",
     numberFormatter((initBalance - balance) / LAMPORTS_PER_SOL, true),
     "SOL\n",
   );
+
 
   } catch (error) {
     console.error(error);
