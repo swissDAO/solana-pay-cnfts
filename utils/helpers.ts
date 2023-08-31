@@ -19,10 +19,10 @@ export function loadPublicKeysFromFile(
 
     // load the public keys from the file
     // USE THIS IF RUNNING LOCALLY
-    // const data = JSON.parse(fs.readFileSync(absPath, { encoding: "utf-8" })) || {};
+    const data = JSON.parse(fs.readFileSync(absPath, { encoding: "utf-8" })) || {};
 
     // USE THIS IF RUNNING IN A BROWSER
-    const data = JSON.parse(process.env.NEXT_PUBLIC_TREE_KEYS!);
+    // const data = JSON.parse(process.env.NEXT_PUBLIC_TREE_KEYS!);
 
     // convert all loaded keyed values into valid public keys
     for (const [key, value] of Object.entries(data)) {
@@ -116,10 +116,11 @@ export function loadKeypairFromFile(absPath: string) {
 
     // load the keypair from the file
     // USE THIS IF RUNNING LOCALLY
-    // const keyfileBytes = JSON.parse(fs.readFileSync(absPath, { encoding: "utf-8" }));
+    const keyfileBytes = JSON.parse(fs.readFileSync(absPath, { encoding: "utf-8" }));
 
     // USE THIS IF RUNNING IN A BROWSER
-    const keyfileBytes = JSON.parse(process.env.NEXT_PUBLIC_DEMO_KEY!);
+    // const keyfileBytes = JSON.parse(process.env.NEXT_PUBLIC_DEMO_KEY!);
+    
     // parse the loaded secretKey into a valid keypair
     const keypair = Keypair.fromSecretKey(new Uint8Array(keyfileBytes));
     return keypair;
