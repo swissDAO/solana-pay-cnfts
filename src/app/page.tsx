@@ -163,7 +163,7 @@ export default function Home() {
               {!qrActive && renderProducts()}
               <button
                 className="z-20 px-4 py-2 font-bold text-white bg-red-500 rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75"
-                onClick={!qrActive ? handleGenerateQR : handleClearQR}
+                onClick={()=>{!qrActive ? handleGenerateQR() : handleClearQR()}}
               >
                 {!qrActive ? "Generate QR" : "Clear QR"}
               </button>
