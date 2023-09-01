@@ -135,6 +135,7 @@ export default function Home() {
 
   const handleClearQR = () => {
     qrRef.current?.removeChild(qrRef.current?.firstChild!);
+    generateNewReference();
     setQrActive(false);
   }
 
