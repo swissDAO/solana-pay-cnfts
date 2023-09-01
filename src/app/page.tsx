@@ -133,6 +133,11 @@ export default function Home() {
     setQrActive(true);
   }
 
+  const handleClearQR = () => {
+    qrRef.current?.removeChild(qrRef.current?.firstChild!);
+    setQrActive(false);
+  }
+
   const handleReceiptMint = async () => {
     
   };
@@ -154,14 +159,15 @@ export default function Home() {
         <h1 className="text-4xl font-bold text-center">Solana Pay Demo</h1>
           <div>
             <div className="flex-col z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-              {renderProducts()}
+              {!qrActive && renderProducts()}
               <button
                 className="z-20 px-4 py-2 font-bold text-white bg-red-500 rounded-lg shadow-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-400 focus:ring-opacity-75"
-                onClick={handleGenerateQR}
+                onClick={!qrActive ? handleGenerateQR : handleClearQR}
               >
-                {!qrActive ? "Make it rain" : "Stop the money printer!"}
+                {!qrActive ? "Generate QR" : "Clear QR"}
               </button>
             </div>
+            <div ref={qrRef} />
           </div>
         <Link href="https://www.swissdao.space">
           <Logo width={200} height={200} className='text-red-500' />
