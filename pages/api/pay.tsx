@@ -47,6 +47,7 @@ const solanaConnection = new Connection(process.env.NEXT_PUBLIC_RPC_URL!, 'confi
 // Get details about the USDC token - Devnet
 const usdcAddress =new PublicKey('Gh9ZwEmdLJ8DscKNTkTqPbNwLNNBjuSzaG9Vp2KGtKJr')
 
+
 function get(res: NextApiResponse<MakeTransactionGetResponse>) {
     res.status(200).json({
       label: "swissDAO",

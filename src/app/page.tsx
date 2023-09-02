@@ -9,6 +9,7 @@ import { createQR, encodeURL, TransactionRequestURLFields, findReference, FindRe
 import { products } from '../../constants/products';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { clear } from 'console';
 
 export default function Home() {
   const [qrActive, setQrActive] = useState(false);
@@ -16,7 +17,9 @@ export default function Home() {
   const notify = (message: string ) => toast(message);
   // ref to a div where we'll show the QR code
   const qrRef = useRef<HTMLDivElement>(null)
-  
+  const solanaConnection = new Connection(process.env.NEXT_PUBLIC_RPC_URL!, 'confirmed');
+  const mostRecentNotifiedTransaction = useRef<string | undefined>(undefined);
+  const [paymentConfirmation, setPaymentConfirmation] = useState<any>(undefined)
   const [reference, setReference] = useState<PublicKey>(Keypair.generate().publicKey);
   const generateNewReference = () => {
     setReference(Keypair.generate().publicKey);
@@ -139,14 +142,105 @@ export default function Home() {
     setQrActive(false);
   }
 
-  const handleReceiptMint = async () => {
-    
+  const handleReceiptMint = async (buyer: string) => {
+    const cart_as_string = cart.map((item) => `${item.id} x ${item.quantity}`).join(', '); 
+    if(!buyer) return;
+    const CONFIG = { 
+      buyerPublicKey: buyer,
+      products: cart_as_string,
+      amount: paymentConfirmation?.amount,
+      reference: paymentConfirmation?.reference, 
+    };
+    const res = await fetch(
+      '/api/receipt',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(CONFIG),
+      }
+    );
+    const response_status = res.status;
+    if(response_status === 200) {
+      console.log('coupon minted');
+    }
+ 
+    return ;
   };
 
   const handleCouponMint = async () => {
     
   };
-  
+
+  useEffect(() => {
+    if(!paymentConfirmation) return;
+    console.log('payment confirmed, minting receipt')
+    handleReceiptMint(paymentConfirmation?.signer!);
+    
+    if(qrRef.current?.firstChild){
+      qrRef.current?.removeChild(qrRef.current?.firstChild!);
+    }
+    setQrActive(false);
+    setCart([]);
+
+    generateNewReference();
+    notify(`Transaction verified, you spent ${paymentConfirmation?.amount} USDC.
+      ${
+        parseFloat(paymentConfirmation?.amount) >= parseFloat('10.00') ?
+        `You spent ${paymentConfirmation?.amount} USDC and will receive a coupon!` :
+        `Spend ${parseFloat('10.00') - parseFloat(paymentConfirmation?.amount)} more USDC to receive a coupon next time!`
+      }`);
+    
+  }, [paymentConfirmation]);
+
+  useEffect(() => {
+    // how can we gurantee this only runs once? 
+    // we need to check if the transaction has already been confirmed
+    //
+    if(paymentConfirmation) return;
+    const interval = setInterval(async () => {
+      try {
+        // Check if there is any transaction for the reference
+        const signatureInfo = await findReference(solanaConnection, reference, { until: mostRecentNotifiedTransaction.current });
+
+        console.log('Transaction confirmed', signatureInfo);
+        mostRecentNotifiedTransaction.current = signatureInfo.signature;
+
+        // get the parsed transaction info from the store wallet address
+        const parsed_transaction = await solanaConnection.getParsedTransactions([mostRecentNotifiedTransaction.current!], 'confirmed');
+        
+        // parse parsed_transaction[0]?.transaction?.message.accountKeys for where signer: true and get the public key
+        const signer_of_transaction = parsed_transaction[0]?.transaction?.message.accountKeys.filter((account: any) => account.signer)[0].pubkey.toBase58();
+        
+        // get the transfered amount from the parsed transaction
+        // @ts-ignore
+        const transfered_amount = parsed_transaction[0]?.transaction?.message.instructions.filter((program: any) => program.program === 'spl-token')[0].parsed.info.tokenAmount.uiAmount;
+        
+        console.log('parsed transaction', parsed_transaction)
+        console.log('transfered amount', transfered_amount)
+
+        const confirmation = {
+          signer: signer_of_transaction,
+          amount: transfered_amount,
+          reference: reference.toBase58(),
+        }
+
+        setPaymentConfirmation(confirmation);
+        clearInterval(interval);
+
+      } catch (e) {
+        if (e instanceof FindReferenceError) {
+          // No transaction found yet, ignore this error
+          return;
+        }
+        console.error('Unknown error', e)
+      }
+    }, 1500)
+    return () => {
+      clearInterval(interval)
+    }
+  }, [solanaConnection, reference])
 
   return (
     <>
