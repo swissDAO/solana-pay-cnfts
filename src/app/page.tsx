@@ -9,7 +9,6 @@ import { createQR, encodeURL, TransactionRequestURLFields, findReference, FindRe
 import { products } from '../../constants/products';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { clear } from 'console';
 
 export default function Home() {
   const [qrActive, setQrActive] = useState(false);
@@ -169,30 +168,29 @@ export default function Home() {
     return ;
   };
 
-  const handleCouponMint = async () => {
-    
-  };
-
-  useEffect(() => {
-    if(!paymentConfirmation) return;
-    console.log('payment confirmed, minting receipt')
-    handleReceiptMint(paymentConfirmation?.signer!);
-    
-    if(qrRef.current?.firstChild){
-      qrRef.current?.removeChild(qrRef.current?.firstChild!);
+  const handleCouponMint = async (buyer: string) => {
+    if(!buyer) return;
+    const CONFIG = { 
+      buyerPublicKey: buyer,
+      reference: paymentConfirmation?.reference, 
+    };
+    const res = await fetch(
+      '/api/coupon',
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(CONFIG),
+      }
+    );
+    const response_status = res.status;
+    if(response_status === 200) {
+      console.log('receipt minted');
     }
-    setQrActive(false);
-    setCart([]);
-
-    generateNewReference();
-    notify(`Transaction verified, you spent ${paymentConfirmation?.amount} USDC.
-      ${
-        parseFloat(paymentConfirmation?.amount) >= parseFloat('10.00') ?
-        `You spent ${paymentConfirmation?.amount} USDC and will receive a coupon!` :
-        `Spend ${parseFloat('10.00') - parseFloat(paymentConfirmation?.amount)} more USDC to receive a coupon next time!`
-      }`);
-    
-  }, [paymentConfirmation]);
+ 
+    return
+  };
 
   useEffect(() => {
     // how can we gurantee this only runs once? 
@@ -241,6 +239,45 @@ export default function Home() {
       clearInterval(interval)
     }
   }, [solanaConnection, reference])
+
+  useEffect(() => {
+    if(!paymentConfirmation) return;
+    console.log('payment confirmed, minting receipt')
+
+    handleReceiptMint(paymentConfirmation?.signer!);
+
+    if(parseFloat(paymentConfirmation?.amount) >= parseFloat('10.00')){
+      console.log('minting coupon')
+      handleCouponMint(paymentConfirmation?.signer!)
+      if(qrRef.current?.firstChild){
+        qrRef.current?.removeChild(qrRef.current?.firstChild!);
+      }
+      setQrActive(false);
+      setCart([]);
+      generateNewReference();
+      notify(`Transaction verified, you spent ${paymentConfirmation?.amount} USDC.
+        ${
+          parseFloat(paymentConfirmation?.amount) >= parseFloat('10.00') ?
+          `You spent ${paymentConfirmation?.amount} USDC and will receive a coupon!` :
+          `Spend ${parseFloat('10.00') - parseFloat(paymentConfirmation?.amount)} more USDC to receive a coupon next time!`
+        }`);
+    }
+    else {
+      if(qrRef.current?.firstChild){
+        qrRef.current?.removeChild(qrRef.current?.firstChild!);
+      }
+      setQrActive(false);
+      setCart([]);
+
+      generateNewReference();
+      notify(`Transaction verified, you spent ${paymentConfirmation?.amount} USDC.
+        ${
+          parseFloat(paymentConfirmation?.amount) >= parseFloat('10.00') ?
+          `You spent ${paymentConfirmation?.amount} USDC and will receive a coupon!` :
+          `Spend ${parseFloat('10.00') - parseFloat(paymentConfirmation?.amount)} more USDC to receive a coupon next time!`
+        }`);
+    }
+  }, [paymentConfirmation]);
 
   return (
     <>
