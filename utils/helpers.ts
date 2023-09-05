@@ -1,11 +1,16 @@
-import fs from "fs";
-import path from "path";
-import { Connection, Keypair, LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
+import fs from 'fs';
+import path from 'path';
+import {
+  Connection,
+  Keypair,
+  LAMPORTS_PER_SOL,
+  PublicKey,
+} from '@solana/web3.js';
 
 // define some default locations
-const DEFAULT_KEY_DIR_NAME = ".local_keys";
-const DEFAULT_PUBLIC_KEY_FILE = "keys.json";
-const DEFAULT_DEMO_DATA_FILE = "demo.json";
+const DEFAULT_KEY_DIR_NAME = '.local_keys';
+const DEFAULT_PUBLIC_KEY_FILE = 'keys.json';
+const DEFAULT_DEMO_DATA_FILE = 'demo.json';
 
 /*
   Load locally stored PublicKey addresses
@@ -14,8 +19,8 @@ export function loadPublicKeysFromFile(
   absPath: string = `${DEFAULT_KEY_DIR_NAME}/${DEFAULT_PUBLIC_KEY_FILE}`,
 ) {
   try {
-    if (!absPath) throw Error("No path provided");
-    if (!fs.existsSync(absPath)) throw Error("File does not exist.");
+    if (!absPath) throw Error('No path provided');
+    if (!fs.existsSync(absPath)) throw Error('File does not exist.');
 
     // load the public keys from the file
     // USE THIS IF RUNNING LOCALLY
@@ -26,7 +31,7 @@ export function loadPublicKeysFromFile(
 
     // convert all loaded keyed values into valid public keys
     for (const [key, value] of Object.entries(data)) {
-      data[key] = new PublicKey(value as string) ?? "";
+      data[key] = new PublicKey(value as string) ?? '';
     }
 
     return data;
@@ -50,18 +55,18 @@ export function saveDemoDataToFile(
 
     // fetch all the current values, when the storage file exists
     if (fs.existsSync(absPath))
-      data = JSON.parse(fs.readFileSync(absPath, { encoding: "utf-8" })) || {};
+      data = JSON.parse(fs.readFileSync(absPath, { encoding: 'utf-8' })) || {};
 
     data = { ...data, [name]: newData };
 
     // actually save the data to the file
     fs.writeFileSync(absPath, JSON.stringify(data), {
-      encoding: "utf-8",
+      encoding: 'utf-8',
     });
 
     return data;
   } catch (err) {
-    console.warn("Unable to save to file");
+    console.warn('Unable to save to file');
     // console.warn(err);
   }
 
@@ -92,7 +97,7 @@ export function savePublicKeyToFile(
 
     // actually save the data to the file
     fs.writeFileSync(absPath, JSON.stringify(data), {
-      encoding: "utf-8",
+      encoding: 'utf-8',
     });
 
     // reload the keys for sanity
@@ -100,7 +105,7 @@ export function savePublicKeyToFile(
 
     return data;
   } catch (err) {
-    console.warn("Unable to save to file");
+    console.warn('Unable to save to file');
   }
   // always return an object
   return {};
@@ -111,8 +116,8 @@ export function savePublicKeyToFile(
 */
 export function loadKeypairFromFile(absPath: string) {
   try {
-    if (!absPath) throw Error("No path provided");
-    if (!fs.existsSync(absPath)) throw Error("File does not exist.");
+    if (!absPath) throw Error('No path provided');
+    if (!fs.existsSync(absPath)) throw Error('File does not exist.');
 
     // load the keypair from the file
     // USE THIS IF RUNNING LOCALLY
@@ -147,7 +152,7 @@ export function saveKeypairToFile(
 
   // write the `secretKey` value as a string
   fs.writeFileSync(fileName, `[${keypair.secretKey.toString()}]`, {
-    encoding: "utf-8",
+    encoding: 'utf-8',
   });
 
   return fileName;
@@ -156,7 +161,10 @@ export function saveKeypairToFile(
 /*
   Attempt to load a keypair from the filesystem, or generate and save a new one
 */
-export function loadOrGenerateKeypair(fileName: string, dirName: string = DEFAULT_KEY_DIR_NAME) {
+export function loadOrGenerateKeypair(
+  fileName: string,
+  dirName: string = DEFAULT_KEY_DIR_NAME,
+) {
   try {
     // compute the path to locate the file
     const searchPath = path.join(dirName, `${fileName}.json`);
@@ -169,7 +177,7 @@ export function loadOrGenerateKeypair(fileName: string, dirName: string = DEFAUL
 
     return keypair;
   } catch (err) {
-    console.error("loadOrGenerateKeypair:", err);
+    console.error('loadOrGenerateKeypair:', err);
     throw err;
   }
 }
@@ -184,18 +192,19 @@ export function explorerURL({
 }: {
   address?: string;
   txSignature?: string;
-  cluster?: "devnet" | "testnet" | "mainnet" | "mainnet-beta";
+  cluster?: 'devnet' | 'testnet' | 'mainnet' | 'mainnet-beta';
 }) {
   let baseUrl: string;
   //
   if (address) baseUrl = `https://explorer.solana.com/address/${address}`;
-  else if (txSignature) baseUrl = `https://explorer.solana.com/tx/${txSignature}`;
-  else return "[unknown]";
+  else if (txSignature)
+    baseUrl = `https://explorer.solana.com/tx/${txSignature}`;
+  else return '[unknown]';
 
   // auto append the desired search params
   const url = new URL(baseUrl);
-  url.searchParams.append("cluster", cluster || "devnet");
-  return url.toString() + "\n";
+  url.searchParams.append('cluster', cluster || 'devnet');
+  return url.toString() + '\n';
 }
 
 /**
@@ -214,11 +223,15 @@ export async function airdropOnLowBalance(
 
   // check the balance of the two accounts, airdrop when low
   if (forceAirdrop === true || balance < MIN_BALANCE_TO_AIRDROP) {
-    console.log(`Requesting airdrop of 1 SOL to ${keypair.publicKey.toBase58()}...`);
-    await connection.requestAirdrop(keypair.publicKey, LAMPORTS_PER_SOL).then(sig => {
-      console.log("Tx signature:", sig);
-      // balance = balance + LAMPORTS_PER_SOL;
-    });
+    console.log(
+      `Requesting airdrop of 1 SOL to ${keypair.publicKey.toBase58()}...`,
+    );
+    await connection
+      .requestAirdrop(keypair.publicKey, LAMPORTS_PER_SOL)
+      .then(sig => {
+        console.log('Tx signature:', sig);
+        // balance = balance + LAMPORTS_PER_SOL;
+      });
 
     // fetch the new balance
     // const newBalance = await connection.getBalance(keypair.publicKey);
@@ -240,9 +253,9 @@ export async function extractSignatureFromFailedTransaction(
   if (err?.signature) return err.signature;
 
   // extract the failed transaction's signature
-  const failedSig = new RegExp(/^((.*)?Error: )?(Transaction|Signature) ([A-Z0-9]{32,}) /gim).exec(
-    err?.message?.toString(),
-  )?.[4];
+  const failedSig = new RegExp(
+    /^((.*)?Error: )?(Transaction|Signature) ([A-Z0-9]{32,}) /gim,
+  ).exec(err?.message?.toString())?.[4];
 
   // ensure a signature was found
   if (failedSig) {
@@ -254,14 +267,16 @@ export async function extractSignatureFromFailedTransaction(
         })
         .then(tx => {
           console.log(`\n==== Transaction logs for ${failedSig} ====`);
-          console.log(explorerURL({ txSignature: failedSig }), "");
-          console.log(tx?.meta?.logMessages ?? "No log messages provided by RPC");
+          console.log(explorerURL({ txSignature: failedSig }), '');
+          console.log(
+            tx?.meta?.logMessages ?? 'No log messages provided by RPC',
+          );
           console.log(`==== END LOGS ====\n`);
         });
     else {
-      console.log("\n========================================");
+      console.log('\n========================================');
       console.log(explorerURL({ txSignature: failedSig }));
-      console.log("========================================\n");
+      console.log('========================================\n');
     }
   }
 
@@ -286,7 +301,7 @@ export function numberFormatter(num: number, forceDecimals = false) {
   Display a separator in the console, with our without a message
 */
 export function printConsoleSeparator(message?: string) {
-  console.log("\n===============================================");
-  console.log("===============================================\n");
+  console.log('\n===============================================');
+  console.log('===============================================\n');
   if (message) console.log(message);
 }

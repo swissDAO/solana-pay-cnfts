@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "demo": "npx ts-node -r tsconfig-paths/register"
+    "demo": "npx ts-node -r tsconfig-paths/register",
+    "prettier": "prettier --write \"**/*.{ts,tsx,md}\""
   },
   "dependencies": {
     "@metaplex-foundation/js": "^0.19.4",
