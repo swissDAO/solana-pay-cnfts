@@ -1,11 +1,26 @@
-import { Commitment, Connection, ConnectionConfig, PublicKey } from "@solana/web3.js";
+import {
+  Commitment,
+  Connection,
+  ConnectionConfig,
+  PublicKey,
+} from '@solana/web3.js';
 
-import { TokenStandard } from "@metaplex-foundation/mpl-token-metadata";
-import { PROGRAM_ID as BUBBLEGUM_PROGRAM_ID } from "@metaplex-foundation/mpl-bubblegum";
+import { TokenStandard } from '@metaplex-foundation/mpl-token-metadata';
+import { PROGRAM_ID as BUBBLEGUM_PROGRAM_ID } from '@metaplex-foundation/mpl-bubblegum';
 
 // import from the `@metaplex-foundation/js`
-import { MetaplexError, toBigNumber, Pda, amount } from "@metaplex-foundation/js";
-import type { SplTokenCurrency, Metadata, Mint, NftOriginalEdition } from "@metaplex-foundation/js";
+import {
+  MetaplexError,
+  toBigNumber,
+  Pda,
+  amount,
+} from '@metaplex-foundation/js';
+import type {
+  SplTokenCurrency,
+  Metadata,
+  Mint,
+  NftOriginalEdition,
+} from '@metaplex-foundation/js';
 
 // local imports for the ReadApi types
 import type {
@@ -16,7 +31,7 @@ import type {
   GetAssetsByGroupRpcInput,
   ReadApiAsset,
   ReadApiAssetList,
-} from "@/ReadApi/types";
+} from '@/ReadApi/types';
 
 type JsonRpcParams<ReadApiMethodParams> = {
   method: string;
@@ -30,18 +45,20 @@ type JsonRpcOutput<ReadApiJsonOutput> = {
 
 /** @group Errors */
 export class ReadApiError extends MetaplexError {
-  readonly name: string = "ReadApiError";
+  readonly name: string = 'ReadApiError';
   constructor(message: string, cause?: Error) {
-    super(message, "rpc", undefined, cause);
+    super(message, 'rpc', undefined, cause);
   }
 }
 
 /**
  * Convert a ReadApi asset (e.g. compressed NFT) into an NftEdition
  */
-export const toNftEditionFromReadApiAsset = (input: ReadApiAsset): NftOriginalEdition => {
+export const toNftEditionFromReadApiAsset = (
+  input: ReadApiAsset,
+): NftOriginalEdition => {
   return {
-    model: "nftEdition",
+    model: 'nftEdition',
     isOriginal: true,
     address: new PublicKey(input.id),
     supply: toBigNumber(input.supply.print_current_supply),
@@ -54,13 +71,13 @@ export const toNftEditionFromReadApiAsset = (input: ReadApiAsset): NftOriginalEd
  */
 export const toMintFromReadApiAsset = (input: ReadApiAsset): Mint => {
   const currency: SplTokenCurrency = {
-    symbol: "Token",
+    symbol: 'Token',
     decimals: 0,
-    namespace: "spl-token",
+    namespace: 'spl-token',
   };
 
   return {
-    model: "mint",
+    model: 'mint',
     address: new PublicKey(input.id),
     mintAuthorityAddress: new PublicKey(input.id),
     freezeAuthorityAddress: new PublicKey(input.id),
@@ -75,26 +92,30 @@ export const toMintFromReadApiAsset = (input: ReadApiAsset): Mint => {
  * Convert a ReadApi asset's data into standard Metaplex `Metadata`
  */
 export const toMetadataFromReadApiAsset = (input: ReadApiAsset): Metadata => {
-  const updateAuthority = input.authorities?.find(authority => authority.scopes.includes("full"));
+  const updateAuthority = input.authorities?.find(authority =>
+    authority.scopes.includes('full'),
+  );
 
-  const collection = input.grouping.find(({ group_key }) => group_key === "collection");
+  const collection = input.grouping.find(
+    ({ group_key }) => group_key === 'collection',
+  );
 
   return {
-    model: "metadata",
+    model: 'metadata',
     /**
      * We technically don't have a metadata address anymore.
      * So we are using the asset's id as the address
      */
     address: Pda.find(BUBBLEGUM_PROGRAM_ID, [
-      Buffer.from("asset", "utf-8"),
+      Buffer.from('asset', 'utf-8'),
       new PublicKey(input.compression.tree).toBuffer(),
-      Uint8Array.from(toBigNumber(input.compression.leaf_id).toArray("le", 8)),
+      Uint8Array.from(toBigNumber(input.compression.leaf_id).toArray('le', 8)),
     ]),
     mintAddress: new PublicKey(input.id),
     updateAuthorityAddress: new PublicKey(updateAuthority!.address),
 
-    name: input.content.metadata?.name ?? "",
-    symbol: input.content.metadata?.symbol ?? "",
+    name: input.content.metadata?.name ?? '',
+    symbol: input.content.metadata?.symbol ?? '',
 
     json: input.content.metadata,
     jsonLoaded: true,
@@ -131,7 +152,10 @@ export const toMetadataFromReadApiAsset = (input: ReadApiAsset): Metadata => {
  * for state compression and compressed NFTs
  */
 export class WrapperConnection extends Connection {
-  constructor(endpoint: string, commitmentOrConfig?: Commitment | ConnectionConfig) {
+  constructor(
+    endpoint: string,
+    commitmentOrConfig?: Commitment | ConnectionConfig,
+  ) {
     super(endpoint, commitmentOrConfig);
   }
 
@@ -139,14 +163,14 @@ export class WrapperConnection extends Connection {
     jsonRpcParams: JsonRpcParams<ReadApiMethodParams>,
   ): Promise<JsonRpcOutput<ReadApiJsonOutput>> => {
     const response = await fetch(this.rpcEndpoint, {
-      method: "POST",
+      method: 'POST',
       headers: {
-        "Content-Type": "application/json",
+        'Content-Type': 'application/json',
       },
       body: JSON.stringify({
-        jsonrpc: "2.0",
+        jsonrpc: '2.0',
         method: jsonRpcParams.method,
-        id: jsonRpcParams.id ?? "rpd-op-123",
+        id: jsonRpcParams.id ?? 'rpd-op-123',
         params: jsonRpcParams.params,
       }),
     });
@@ -157,14 +181,17 @@ export class WrapperConnection extends Connection {
   // Asset id can be calculated via Bubblegum#getLeafAssetId
   // It is a PDA with the following seeds: ["asset", tree, leafIndex]
   async getAsset(assetId: PublicKey): Promise<ReadApiAsset> {
-    const { result: asset } = await this.callReadApi<GetAssetRpcInput, ReadApiAsset>({
-      method: "getAsset",
+    const { result: asset } = await this.callReadApi<
+      GetAssetRpcInput,
+      ReadApiAsset
+    >({
+      method: 'getAsset',
       params: {
         id: assetId.toBase58(),
       },
     });
 
-    if (!asset) throw new ReadApiError("No asset returned");
+    if (!asset) throw new ReadApiError('No asset returned');
 
     return asset;
   }
@@ -176,13 +203,13 @@ export class WrapperConnection extends Connection {
       GetAssetProofRpcInput,
       GetAssetProofRpcResponse
     >({
-      method: "getAssetProof",
+      method: 'getAssetProof',
       params: {
         id: assetId.toBase58(),
       },
     });
 
-    if (!proof) throw new ReadApiError("No asset proof returned");
+    if (!proof) throw new ReadApiError('No asset proof returned');
 
     return proof;
   }
@@ -198,15 +225,18 @@ export class WrapperConnection extends Connection {
     after,
   }: GetAssetsByGroupRpcInput): Promise<ReadApiAssetList> {
     // `page` cannot be supplied with `before` or `after`
-    if (typeof page == "number" && (before || after))
+    if (typeof page == 'number' && (before || after))
       throw new ReadApiError(
-        "Pagination Error. Only one pagination parameter supported per query.",
+        'Pagination Error. Only one pagination parameter supported per query.',
       );
 
     // a pagination method MUST be selected, but we are defaulting to using `page=0`
 
-    const { result } = await this.callReadApi<GetAssetsByGroupRpcInput, ReadApiAssetList>({
-      method: "getAssetsByGroup",
+    const { result } = await this.callReadApi<
+      GetAssetsByGroupRpcInput,
+      ReadApiAssetList
+    >({
+      method: 'getAssetsByGroup',
       params: {
         groupKey,
         groupValue,
@@ -218,7 +248,7 @@ export class WrapperConnection extends Connection {
       },
     });
 
-    if (!result) throw new ReadApiError("No results returned");
+    if (!result) throw new ReadApiError('No results returned');
 
     return result;
   }
@@ -233,15 +263,18 @@ export class WrapperConnection extends Connection {
     after,
   }: GetAssetsByOwnerRpcInput): Promise<ReadApiAssetList> {
     // `page` cannot be supplied with `before` or `after`
-    if (typeof page == "number" && (before || after))
+    if (typeof page == 'number' && (before || after))
       throw new ReadApiError(
-        "Pagination Error. Only one pagination parameter supported per query.",
+        'Pagination Error. Only one pagination parameter supported per query.',
       );
 
     // a pagination method MUST be selected, but we are defaulting to using `page=0`
 
-    const { result } = await this.callReadApi<GetAssetsByOwnerRpcInput, ReadApiAssetList>({
-      method: "getAssetsByOwner",
+    const { result } = await this.callReadApi<
+      GetAssetsByOwnerRpcInput,
+      ReadApiAssetList
+    >({
+      method: 'getAssetsByOwner',
       params: {
         ownerAddress,
         after: after ?? null,
@@ -252,7 +285,7 @@ export class WrapperConnection extends Connection {
       },
     });
 
-    if (!result) throw new ReadApiError("No results returned");
+    if (!result) throw new ReadApiError('No results returned');
 
     return result;
   }

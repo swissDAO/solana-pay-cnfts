@@ -1,4 +1,5 @@
 # swissDAO Solana Pay Build w/ cNFT's
+
 [![made-with-react](https://img.shields.io/badge/Made%20with-React-1f425f.svg)](https://reactjs.org/)
 [![made-with-nextjs](https://img.shields.io/badge/Made%20with-Next.js-1f425f.svg)](https://nextjs.org/)
 [![made-with-typescript](https://img.shields.io/badge/Made%20with-Typescript-1f425f.svg)](https://www.typescriptlang.org/)
@@ -11,11 +12,7 @@ This build is a proof of concept for a Solana Pay build that utilizes cNFT's to 
 
 If the payment is greater than 10 USDC then a cNFT is issued. When the cNFT is present in wallet during payment, it is transfered back to the store for a 50% discount on current transaction.
 
-This allows for multiple potential use cases for the cNFT in this manner, such as:
-    - Coupons (as in this example)
-    - Loyalty Points (can dynamically update the metadata to reflect current points)
-    - Tickets (can dynamically create and update the metadata to reflect current ticket status)
-    - Receipts (log the line items of a transaction and store them in the metadata, providing a digital receipt that could be used for refunds or exchanges)
+This allows for multiple potential use cases for the cNFT in this manner, such as: - Coupons (as in this example) - Loyalty Points (can dynamically update the metadata to reflect current points) - Tickets (can dynamically create and update the metadata to reflect current ticket status) - Receipts (log the line items of a transaction and store them in the metadata, providing a digital receipt that could be used for refunds or exchanges)
 
 ## Table of Contents (Optional)
 
@@ -45,6 +42,7 @@ This will also generate a `/.local_keys` folder that will contain keys to make l
 Download `ngrok` to run a live local server that allows your QR code to be scanned with a mobile device while still on localhost
 
 <!-- insert image  -->
+
 ![ngrok](/public/walkthru/ngrok.png)
 
 Copy the forwarding address in your terminal and paste in your browser.
@@ -56,7 +54,7 @@ Copy the forwarding address in your terminal and paste in your browser.
 -In order to use USDC on Devnet, you need to get some from a faucet or create your own token. Easiest option is use this faucet:
 `https://spl-token-faucet.com/?token-name=USDC-Dev`
 
--All Products are hardcoded in to  `/constants/products.tsx` and can be updated to reflect your own products
+-All Products are hardcoded in to `/constants/products.tsx` and can be updated to reflect your own products
 
 -Explorer.Solana.com is the best browser right now to see cNFT's
 
@@ -73,10 +71,11 @@ Raza - Solana Pay Build on buildspace.so (https://buildspace.so/builds/solana-pa
 Nick Frosty - Compressed NFT's on Solana repo (https://github.com/solana-developers/compressed-nfts)
 
 ## License
+
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-
 ### Todo List
+
 - [✅] Figure out why 3 txn's crash the app, is it RPC upates on the cNFT transfers?
 - [✅] Dynamically update the cNFT metadata to reflect the detailes of transaction (ie. line items, points, etc.)
 - [✅] Find less RPC intensive way to verify txn??
