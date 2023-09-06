@@ -6,7 +6,12 @@ import {
   sendAndConfirmTransaction,
   TransactionInstruction,
 } from "@solana/web3.js";
-import { createAccount, createMint, mintTo, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  createAccount,
+  createMint,
+  mintTo,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
 import {
   SPL_ACCOUNT_COMPRESSION_PROGRAM_ID,
   createAllocTreeIx,
@@ -30,7 +35,10 @@ import {
 } from "@metaplex-foundation/mpl-token-metadata";
 
 // import local helper functions
-import { explorerURL, extractSignatureFromFailedTransaction } from "../utils/helpers";
+import {
+  explorerURL,
+  extractSignatureFromFailedTransaction,
+} from "../utils/helpers";
 
 /*
   Helper function to create a merkle tree on chain, including allocating 
@@ -167,7 +175,11 @@ export async function createCollection(
 
   // derive the PDA for the metadata account
   const [metadataAccount, _bump] = PublicKey.findProgramAddressSync(
-    [Buffer.from("metadata", "utf8"), TOKEN_METADATA_PROGRAM_ID.toBuffer(), mint.toBuffer()],
+    [
+      Buffer.from("metadata", "utf8"),
+      TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+      mint.toBuffer(),
+    ],
     TOKEN_METADATA_PROGRAM_ID,
   );
   console.log("Metadata account:", metadataAccount.toBase58());
@@ -236,10 +248,15 @@ export async function createCollection(
     tx.feePayer = payer.publicKey;
 
     // send the transaction to the cluster
-    const txSignature = await sendAndConfirmTransaction(connection, tx, [payer], {
-      commitment: "confirmed",
-      skipPreflight: true,
-    });
+    const txSignature = await sendAndConfirmTransaction(
+      connection,
+      tx,
+      [payer],
+      {
+        commitment: "confirmed",
+        skipPreflight: true,
+      },
+    );
 
     console.log("\nCollection successfully created!");
     console.log(explorerURL({ txSignature }));
@@ -303,8 +320,12 @@ export async function mintCompressedNFT(
    * (since it is performed on chain via the Bubblegum program)
    * this is only for demonstration
    */
-  const computedDataHash = new PublicKey(computeDataHash(metadataArgs)).toBase58();
-  const computedCreatorHash = new PublicKey(computeCreatorHash(metadataArgs.creators)).toBase58();
+  const computedDataHash = new PublicKey(
+    computeDataHash(metadataArgs),
+  ).toBase58();
+  const computedCreatorHash = new PublicKey(
+    computeCreatorHash(metadataArgs.creators),
+  ).toBase58();
   console.log("computedDataHash:", computedDataHash);
   console.log("computedCreatorHash:", computedCreatorHash);
 
@@ -361,10 +382,15 @@ export async function mintCompressedNFT(
     tx.feePayer = payer.publicKey;
 
     // send the transaction to the cluster
-    const txSignature = await sendAndConfirmTransaction(connection, tx, [payer], {
-      commitment: "confirmed",
-      skipPreflight: true,
-    });
+    const txSignature = await sendAndConfirmTransaction(
+      connection,
+      tx,
+      [payer],
+      {
+        commitment: "confirmed",
+        skipPreflight: true,
+      },
+    );
 
     console.log("\nSuccessfully minted the compressed NFT!");
     console.log(explorerURL({ txSignature }));
