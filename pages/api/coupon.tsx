@@ -33,11 +33,11 @@ export default async function handler(req: NextApiRequest, res: NextApiResponse)
 
             console.log('creator wallet address', payer.publicKey.toBase58());
             
-            const couponTreeAddress = new PublicKey(process.env.NEXT_PUBLIC_RECEIPT_TREE_ADDRESS!);
-            const couponTreeAuthority = new PublicKey(process.env.NEXT_PUBLIC_RECEIPT_TREE_AUTHORITY!);
-            const couponCollectionMint = new PublicKey(process.env.NEXT_PUBLIC_RECEIPT_COLLECTION_MINT!);
-            const couponCollectionMetadataAccount = new PublicKey(process.env.NEXT_PUBLIC_RECEIPT_COLLECTION_METADATA_ACCOUNT!);
-            const couponCollectionMasterEditionAccount = new PublicKey(process.env.NEXT_PUBLIC_RECEIPT_COLLECTION_MASTER_EDITION_ACCOUNT!);
+            const couponTreeAddress = new PublicKey(process.env.NEXT_PUBLIC_COUPON_TREE_ADDRESS!);
+            const couponTreeAuthority = new PublicKey(process.env.NEXT_PUBLIC_COUPON_TREE_AUTHORITY!);
+            const couponCollectionMint = new PublicKey(process.env.NEXT_PUBLIC_COUPON_COLLECTION_MINT!);
+            const couponCollectionMetadataAccount = new PublicKey(process.env.NEXT_PUBLIC_COUPON_COLLECTION_METADATA_ACCOUNT!);
+            const couponCollectionMasterEditionAccount = new PublicKey(process.env.NEXT_PUBLIC_COUPON_COLLECTION_MASTER_EDITION_ACCOUNT!);
                                     
             // create the metadata for the compressed NFT************************************************************************
             async function createCollectionNftURI() {

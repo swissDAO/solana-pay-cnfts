@@ -162,7 +162,7 @@ export default function Home() {
     );
     const response_status = res.status;
     if(response_status === 200) {
-      console.log('coupon minted');
+      console.log('receipt minted');
     }
  
     return ;
@@ -186,16 +186,13 @@ export default function Home() {
     );
     const response_status = res.status;
     if(response_status === 200) {
-      console.log('receipt minted');
+      console.log('coupon minted');
     }
  
     return
   };
 
   useEffect(() => {
-    // how can we gurantee this only runs once? 
-    // we need to check if the transaction has already been confirmed
-    //
     if(paymentConfirmation) return;
     const interval = setInterval(async () => {
       try {
@@ -261,6 +258,7 @@ export default function Home() {
           `You spent ${paymentConfirmation?.amount} USDC and will receive a coupon!` :
           `Spend ${parseFloat('10.00') - parseFloat(paymentConfirmation?.amount)} more USDC to receive a coupon next time!`
         }`);
+      setPaymentConfirmation(undefined);
     }
     else {
       if(qrRef.current?.firstChild){
@@ -276,6 +274,8 @@ export default function Home() {
           `You spent ${paymentConfirmation?.amount} USDC and will receive a coupon!` :
           `Spend ${parseFloat('10.00') - parseFloat(paymentConfirmation?.amount)} more USDC to receive a coupon next time!`
         }`);
+
+      setPaymentConfirmation(undefined);
     }
   }, [paymentConfirmation]);
 
@@ -290,6 +290,13 @@ export default function Home() {
       <main className="flex flex-col items-center justify-center min-h-screen py-2 bg-from-gray-100 via-gray-50 to-gray-100">
         <h1 className="text-4xl font-bold text-center">Solana Pay Demo</h1>
           <div>
+            {cart.length > 0 && (
+              // small border around the cart
+              <div className="flex flex-col items-center justify-center w-full max-w-5xl font-mono text-sm border-2 border-gray-200 rounded-md p-2">
+                <div className="text-lg font-semibold">Cart Total</div>
+                <div className="text-lg font-semibold">{order?.amount} USDC</div>
+              </div>
+            )}
             <div className="flex-col z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
               {!qrActive && renderProducts()}
               <button
