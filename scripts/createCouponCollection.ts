@@ -290,13 +290,7 @@ let initBalance: number, balance: number;
       //   }
       // }
 
-      async function uploadMetadata(
-        imgUri: string,
-        imgType: string,
-        nftName: string,
-        description: string,
-        attributes: { trait_type: string; value: string }[],
-      ) {
+      async function uploadMetadata() {
         console.log(`Step 2 - Uploading Metadata`);
         const { uri } = await METAPLEX.nfts().uploadMetadata({
           name: CONFIG.imgName,
@@ -325,13 +319,7 @@ let initBalance: number, balance: number;
         return uri;
       }
 
-      const metadataUri = await uploadMetadata(
-        imgUri,
-        CONFIG.imgType,
-        CONFIG.imgName,
-        CONFIG.description,
-        CONFIG.attributes,
-      );
+      const metadataUri = await uploadMetadata();
 
       console.log("metadataUri", metadataUri);
       return metadataUri;
@@ -480,13 +468,7 @@ let initBalance: number, balance: number;
       const imgUri =
         "https://arweave.net/dCcyTFef-Usa4yDaWaSysVJSX_kVnV2YWOsp3Q0XrKU";
 
-      async function uploadMetadata(
-        imgUri: string,
-        imgType: string,
-        nftName: string,
-        description: string,
-        attributes: { trait_type: string; value: string }[],
-      ) {
+      async function uploadMetadata() {
         console.log(`Step 2 - Uploading Metadata`);
         const { uri } = await METAPLEX.nfts().uploadMetadata({
           name: NFT_CONFIG.name,
@@ -515,13 +497,7 @@ let initBalance: number, balance: number;
         return uri;
       }
 
-      const metadataUri = await uploadMetadata(
-        imgUri,
-        "image/png",
-        NFT_CONFIG.name,
-        NFT_CONFIG.description,
-        NFT_CONFIG.attributes,
-      );
+      const metadataUri = await uploadMetadata();
 
       return metadataUri;
     };

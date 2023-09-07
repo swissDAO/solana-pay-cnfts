@@ -160,11 +160,50 @@ export default function Home() {
   };
 
   const handleReceiptMint = async (buyer: string) => {
+    const cart_as_string = cart
+      .map((item) => `${item.id} x ${item.quantity}`)
+      .join(", ");
+    if (!buyer) return;
+    const CONFIG = {
+      buyerPublicKey: buyer,
+      products: cart_as_string,
+      amount: paymentConfirmation?.amount,
+      reference: paymentConfirmation?.reference,
+    };
+    const res = await fetch("/api/receipt", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(CONFIG),
+    });
+    const response_status = res.status;
+    if (response_status === 200) {
+      console.log("receipt minted");
+    }
 
+    return;
   };
 
   const handleCouponMint = async (buyer: string) => {
+    if (!buyer) return;
+    const CONFIG = {
+      buyerPublicKey: buyer,
+      reference: paymentConfirmation?.reference,
+    };
+    const res = await fetch("/api/coupon", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(CONFIG),
+    });
+    const response_status = res.status;
+    if (response_status === 200) {
+      console.log("coupon minted");
+    }
 
+    return;
   };
 
   useEffect(() => {
