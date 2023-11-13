@@ -12,4 +12,4 @@ After updating your Environment Variables **you will need to redeploy** for them
 
 After all is done, check out your dedicated URL from Vercel. You've made your very own Digital Payment Processor!!! 
 
-Now, take a break, then get to selling your products you Solana Wizard!
+Now, take a break, then get to selling your products you 🧙‍♂️ Solana Wizard!

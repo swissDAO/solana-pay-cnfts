@@ -8,4 +8,4 @@ At this point you have:
 
 Nice job!! You are now one of the small group of Solana Developers capable of these things. Your abilities are endless!!
 
-Grab some more water real quick and then let's get this build off localhost!
+Grab some more water real quick and then **let's get this build off localhost**!
