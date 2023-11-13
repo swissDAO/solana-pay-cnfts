@@ -1,12 +1,12 @@
 {
     "Section_0": "Lesson_1_What_are_we_building.md",
-    "Section_1": "Lesson_1_Grabbing_the_client_code.md",
+    "Section_1": "Lesson_1_Grab_the_client_code.md",
     "Section_1a": "Lesson_2_Store_Products_and_Shopping_Cart.md",
     "Section_1b": "Lesson_3_Creating_QR_Code.md",
     "Section_2": "Lesson_1_Pay_API_Endpoint.md",
     "Section_3": "Lesson_1_Creating_a_compressed_NFT.md",
     "Section_4": "Lesson_1_Payment_Confirmation.md",
-    "Section_4a": "Lesson_1_Minting_a_Receipt.md",
+    "Section_4a": "Lesson_2_Minting_a_Receipt.md",
     "Section_5": "Lesson_1_Parsing_wallet_for_cNFT.md",
     "Section_5a": "Lesson_2_Recap.md",
     "Section_6": "Lesson_1_Deployment.md"
