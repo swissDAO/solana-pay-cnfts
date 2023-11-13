@@ -1,3 +1,5 @@
+## 📲 Creating a QR Code
+
 When you click the `-/+` buttons you should see the quantity increase and decrease accordingly. Now let's change the `Make it rain` button to it's actual purpose.
 
 If you look at the `onClick` of button you see it's calling on the `handleGenerateQR` function, so let's build that out next.

@@ -1,3 +1,5 @@
+## 💰 Payment Confirmation
+
 Let's head back to our `src/page.tsx` 
 
 First we will need create a Solana connection and two new states up top and before our `return()` we will insert a `useEffect()`. This is where we will perform our transaction confirmation.

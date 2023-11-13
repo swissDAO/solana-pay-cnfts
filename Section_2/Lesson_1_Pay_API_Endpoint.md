@@ -1,3 +1,5 @@
+## 🛜 Payment API Endpoint
+
 Go ahead and open up `/pages/api/pay.tsx`. This is where we are going to generate a transaction from our `apiURL` encoded in the QR code and have the frontend then request the user to approve the transaction.
 
 If you don't understand everything just yet, that's ok, keep building and I'll break it down.

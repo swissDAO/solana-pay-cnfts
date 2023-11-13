@@ -1,3 +1,5 @@
+## 📌 Recap
+
 At this point you have:
 * Created a digital storefront
 * Created the ability to accept payments via Solana

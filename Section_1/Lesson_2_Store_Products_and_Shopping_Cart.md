@@ -1,3 +1,5 @@
+## 🏪 Store Products & Shopping Cart
+
 Let's talk overall goal real quick. The way we are building this app is for a singular store where products do not change often. For this reason, we are hardcoding the products into our code.
 
 But, what if you wanted something more dynamic, like a Web3 Shopify platform where anyone could create stores and add products?
@@ -11,11 +13,11 @@ Open up your code in whatever your preferred IDE is, for anyone new I recommend 
 Navigate to `products.tsx` inside of the `constants` directory and let's add some products.
 
 For my products, I'm going to keep it simple:
-* ID
-* Name
-* Price
-* Description
-* Image
+- [ ] ID
+- [ ] Name
+- [ ] Price
+- [ ] Description
+- [ ] Image
 
 You aren't just limited to these fields, if this were a clothing shop you may add a `variants` field that contains sizes or color options. Spice it up however you see fit!
 

@@ -1,3 +1,5 @@
+## 💳 Parsing Wallet for cNFT
+
 Now that we are issuing coupons for purchases, let's implement a function to check for a coupon cNFT and if it is present, provide a 50% discount and transfer the coupon back to the shop.
 
 Let's head back to our `pay` api endpoint to insert a `checkForCoupon` function above our `get` and `post` function.

@@ -1,3 +1,5 @@
+## 🧾 Minting a Receipt
+
 In your `/pages/api` folder let's create a new file called `receipt.tsx'.
 
 ```
