@@ -13,11 +13,11 @@ Open up your code in whatever your preferred IDE is, for anyone new I recommend 
 Navigate to `products.tsx` inside of the `constants` directory and let's add some products.
 
 For my products, I'm going to keep it simple:
-- [ ] ID
-- [ ] Name
-- [ ] Price
-- [ ] Description
-- [ ] Image
+- [✅] ID
+- [✅] Name
+- [✅] Price
+- [✅] Description
+- [✅] Image
 
 You aren't just limited to these fields, if this were a clothing shop you may add a `variants` field that contains sizes or color options. Spice it up however you see fit!
 
